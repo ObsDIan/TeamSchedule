@@ -1,0 +1,316 @@
+@model TeamSchedule.ViewModels.CalendarMonthViewModel
+@using TeamSchedule.Models
+@{
+    ViewData["Title"] = "個人月曆狀態";
+    var prevMonth = new DateTime(Model.Year, Model.Month, 1).AddMonths(-1);
+    var nextMonth = new DateTime(Model.Year, Model.Month, 1).AddMonths(1);
+}
+
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+
+    .calendar-day-header {
+        text-align: center;
+        font-weight: 600;
+        padding: 10px;
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 8px;
+        color: #495057;
+    }
+
+    .calendar-day-card {
+        min-height: 110px;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 10px;
+        position: relative;
+        background-color: #ffffff;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .calendar-day-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: #4f46e5;
+    }
+
+    .calendar-day-card.other-month {
+        opacity: 0.45;
+        background-color: #f8f9fa;
+    }
+
+    .calendar-day-card.today {
+        border: 2px solid #4f46e5 !important;
+        background-color: #f0f3ff;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .bg-available {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .bg-busy {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    .bg-maybe {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+
+    .bg-unset {
+        background-color: #e2e3e5;
+        color: #41464b;
+    }
+
+    .confirmed-activity-tag {
+        font-size: 0.75rem;
+        background-color: #dc3545;
+        color: white;
+        padding: 3px 6px;
+        border-radius: 6px;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">📅 我的個人狀態月曆</h2>
+            <p class="text-muted mb-0">管理您的個人可用日期，團隊將依此自動計算空檔。</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Calendar" asp-route-year="@prevMonth.Year" asp-route-month="@prevMonth.Month" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                &laquo; @prevMonth.Month 月
+            </a>
+            <h4 class="fw-bold mb-0 mx-2 text-primary">@Model.MonthTitle</h4>
+            <a asp-action="Calendar" asp-route-year="@nextMonth.Year" asp-route-month="@nextMonth.Month" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                @nextMonth.Month 月 &raquo;
+            </a>
+            <a asp-action="WeeklySetup" class="btn btn-primary btn-sm rounded-pill px-3 ms-3">
+                ⚙️ 設定每週預設
+            </a>
+        </div>
+    </div>
+
+    <!-- 图例 -->
+    <div class="d-flex gap-3 mb-3 p-3 bg-white rounded-3 shadow-sm border">
+        <span class="fw-bold me-2">狀態圖例：</span>
+        <span class="status-badge bg-available">🟢 有空 (Available)</span>
+        <span class="status-badge bg-busy">🔴 忙碌 (Busy)</span>
+        <span class="status-badge bg-maybe">🟡 不確定 (Maybe)</span>
+        <span class="status-badge bg-unset">⚪ 未設定 (Unset)</span>
+        <span class="ms-auto text-muted small">* 點擊任意日期即可修改或新增個人特殊備註。</span>
+    </div>
+
+    <!-- 七欄網格 -->
+    <div class="calendar-grid mb-2">
+        <div class="calendar-day-header text-danger">週日</div>
+        <div class="calendar-day-header">週一</div>
+        <div class="calendar-day-header">週二</div>
+        <div class="calendar-day-header">週三</div>
+        <div class="calendar-day-header">週四</div>
+        <div class="calendar-day-header">週五</div>
+        <div class="calendar-day-header text-primary">週六</div>
+    </div>
+
+    <div class="calendar-grid">
+        @foreach (var day in Model.Days)
+        {
+            var isOther = !day.IsCurrentMonth ? "other-month" : "";
+            var isToday = day.IsToday ? "today" : "";
+
+            <div class="calendar-day-card @isOther @isToday" onclick="openDateModal('@day.Date.ToString("yyyy-MM-dd")', '@day.Status', '@day.Note', @day.IsConfirmedActivityBusy.ToString().ToLower())">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-6">@day.Date.Day</span>
+                    @if (day.IsToday)
+                    {
+                        <span class="badge bg-primary rounded-pill">Today</span>
+                    }
+                </div>
+
+                <div class="mt-2">
+                    @if (day.IsConfirmedActivityBusy)
+                    {
+                        <span class="status-badge bg-busy w-100 text-center">🔴 忙碌</span>
+                        <div class="confirmed-activity-tag" title="@day.ConfirmedActivityTitle">
+                            📌 @day.ConfirmedActivityTitle
+                        </div>
+                    }
+                    else if (day.Status == AvailabilityStatus.Available)
+                    {
+                        <span class="status-badge bg-available w-100 text-center">🟢 有空</span>
+                    }
+                    else if (day.Status == AvailabilityStatus.Busy)
+                    {
+                        <span class="status-badge bg-busy w-100 text-center">🔴 忙碌</span>
+                    }
+                    else if (day.Status == AvailabilityStatus.Maybe)
+                    {
+                        <span class="status-badge bg-maybe w-100 text-center">🟡 不確定</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge bg-unset w-100 text-center">⚪ 未設定</span>
+                    }
+
+                    @if (!string.IsNullOrEmpty(day.Note))
+                    {
+                        <div class="text-muted small mt-1 text-truncate" title="@day.Note">
+                            📝 @day.Note
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- 日期狀態編輯 Modal -->
+<div class="modal fade" id="dateEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalDateTitle">設定日期狀態</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div id="confirmedAlert" class="alert alert-warning d-none">
+                    ⚠️ 此日期有已確認參加的團隊活動，狀態固定為「忙碌」，無法直接覆蓋。
+                </div>
+
+                <form id="overrideForm">
+                    <input type="hidden" id="selectedDate" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">選擇此日期的狀態：</label>
+                        <div class="d-grid gap-2">
+                            <input type="radio" class="btn-check" name="statusOption" id="status1" value="1">
+                            <label class="btn btn-outline-success text-start py-2 px-3 rounded-3" for="status1">
+                                🟢 <strong>有空 (Available)</strong> - 當天可以安排活動
+                            </label>
+
+                            <input type="radio" class="btn-check" name="statusOption" id="status2" value="2">
+                            <label class="btn btn-outline-danger text-start py-2 px-3 rounded-3" for="status2">
+                                🔴 <strong>忙碌 (Busy)</strong> - 當天無法安排活動
+                            </label>
+
+                            <input type="radio" class="btn-check" name="statusOption" id="status3" value="3">
+                            <label class="btn btn-outline-warning text-start py-2 px-3 rounded-3" for="status3">
+                                🟡 <strong>不確定 (Maybe)</strong> - 尚未能確定
+                            </label>
+
+                            <input type="radio" class="btn-check" name="statusOption" id="status0" value="0">
+                            <label class="btn btn-outline-secondary text-start py-2 px-3 rounded-3" for="status0">
+                                ⚪ <strong>還原為每週預設狀態</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="noteInput" class="form-label fw-bold">備註 (可選)：</label>
+                        <input type="text" class="form-control rounded-3" id="noteInput" placeholder="例如：家庭聚會、出差..." maxlength="100">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" id="saveStatusBtn" onclick="saveDateOverride()">儲存更新</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let dateModal;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            dateModal = new bootstrap.Modal(document.getElementById('dateEditModal'));
+        });
+
+        function openDateModal(dateStr, currentStatus, currentNote, isConfirmedBusy) {
+            document.getElementById('selectedDate').value = dateStr;
+            document.getElementById('modalDateTitle').innerText = '設定 ' + dateStr + ' 的個人狀態';
+            document.getElementById('noteInput').value = currentNote || '';
+
+            const alertBox = document.getElementById('confirmedAlert');
+            const saveBtn = document.getElementById('saveStatusBtn');
+            const radios = document.getElementsByName('statusOption');
+
+            if (isConfirmedBusy) {
+                alertBox.classList.remove('d-none');
+                saveBtn.disabled = true;
+                radios.forEach(r => r.disabled = true);
+            } else {
+                alertBox.classList.add('d-none');
+                saveBtn.disabled = false;
+                radios.forEach(r => r.disabled = false);
+            }
+
+            // Radio matching
+            let val = '0';
+            if (currentStatus === 'Available') val = '1';
+            else if (currentStatus === 'Busy') val = '2';
+            else if (currentStatus === 'Maybe') val = '3';
+
+            radios.forEach(r => {
+                r.checked = (r.value === val);
+            });
+
+            dateModal.show();
+        }
+
+        async function saveDateOverride() {
+            const date = document.getElementById('selectedDate').value;
+            const note = document.getElementById('noteInput').value;
+
+            let statusVal = null;
+            const selectedRadio = document.querySelector('input[name="statusOption"]:checked');
+            if (selectedRadio && selectedRadio.value !== '0') {
+                statusVal = parseInt(selectedRadio.value);
+            }
+
+            const response = await fetch('/Personal/SetOverride', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({
+                    date: date,
+                    status: statusVal,
+                    note: note
+                })
+            });
+
+            const res = await response.json();
+            if (res.success) {
+                dateModal.hide();
+                window.location.reload();
+            } else {
+                alert('更新失敗：' + (res.message || '請稍後再試'));
+            }
+        }
+    </script>
+}
