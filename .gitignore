@@ -1,30 +1,45 @@
-## Visual Studio / .NET
+# Build & Output Directories
 bin/
 obj/
+Bin/
+Obj/
+build/
+Build/
+out/
+publish/
+
+# Visual Studio & IDE Files
 .vs/
 .idea/
 .vscode/
-
-## User-specific files
 *.user
 *.userosscache
 *.suo
 *.userprefs
 *.sln.docstates
+*.swp
+*~
 
-## Build outputs
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
-[Aa]rm/
-[Aa]rm64/
-bld/
-[Bb]in/
-[Ob]j/
+# Packages
+*.nupkg
+*.snupkg
+**/packages/*
 
-## Environment / Secrets / OS files
+# Local DB & Temp
+*.mdf
+*.ldf
+*.db-shm
+*.db-wal
+
+# Configuration & Secrets
+appsettings.*.Local.json
+appsettings.Secret.json
 *.env
-*.log
+
+# OS Files
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
