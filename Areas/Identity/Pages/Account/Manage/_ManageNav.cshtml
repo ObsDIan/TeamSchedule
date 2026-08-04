@@ -1,0 +1,31 @@
+@using TeamSchedule.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+
+<div class="app-card p-3 shadow-sm mb-4">
+    <div class="fw-bold small muted text-uppercase px-3 pt-2 mb-2">帳號管理選單</div>
+    <ul class="nav nav-pills flex-column gap-1">
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+                <i class="bi bi-person-badge me-2"></i>個人資料與暱稱
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+                <i class="bi bi-envelope me-2"></i>Email 電子郵件
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+                <i class="bi bi-key me-2"></i>變更密碼
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link rounded-3 fw-semibold @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+                <i class="bi bi-shield-check me-2"></i>個人資料隱私
+            </a>
+        </li>
+    </ul>
+</div>
