@@ -16,31 +16,33 @@
     <link rel="stylesheet" href="~/TeamSchedule.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TeamSchedule</a>
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-sm navbar-light glass-navbar mb-4 shadow-sm py-2">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand fw-bold fs-4 text-primary d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span>🗓️</span> <span class="bg-gradient text-primary">TeamSchedule</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 ms-3">
                         <li class="nav-item">
-                            <a class="nav-link text-dark fw-semibold" asp-area="" asp-controller="Home" asp-action="Index">首頁</a>
+                            <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Home" asp-action="Index">首頁</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark fw-semibold" asp-area="" asp-controller="Personal" asp-action="Calendar">📅 個人月曆</a>
+                            <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Personal" asp-action="Calendar">📅 個人月曆</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark fw-semibold" asp-area="" asp-controller="Personal" asp-action="WeeklySetup">⚙️ 每週預設</a>
+                            <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Personal" asp-action="WeeklySetup">⚙️ 每週預設</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark fw-semibold" asp-area="" asp-controller="Team" asp-action="Index">👥 我的團隊</a>
+                            <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Team" asp-action="Index">👥 我的團隊</a>
                         </li>
                     </ul>
                     <div class="d-flex align-items-center">
-                        <button id="themeToggleBtn" type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 me-3" onclick="toggleTheme()">
+                        <button id="themeToggleBtn" type="button" class="btn btn-outline-secondary btn-sm theme-toggle-btn me-3" onclick="toggleTheme()">
                             🌙 深色模式
                         </button>
                         <partial name="_LoginPartial" />

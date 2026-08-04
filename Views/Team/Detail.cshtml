@@ -183,7 +183,7 @@
                         var isOther = !day.IsCurrentMonth ? "other-month" : "";
                         var isToday = day.IsToday ? "today" : "";
 
-                        <div class="team-calendar-day-card @isOther @isToday">
+                        <div class="team-calendar-day-card hover-lift shadow-sm @isOther @isToday">
                             <!-- 4 色由下而上動態比例填充背景 -->
                             <div class="calendar-fill-container">
                                 <div class="fill-segment fill-unset" style="height: @day.UnsetPercent%;"></div>
