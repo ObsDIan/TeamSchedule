@@ -24,65 +24,14 @@
 
     .team-calendar-day-card {
         min-height: 120px;
-        border: 1px solid #e9ecef;
         border-radius: 12px;
         padding: 8px;
         position: relative;
         overflow: hidden;
-        background-color: #ffffff;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         z-index: 1;
-    }
-
-    /* 4 色由下而上百分比填滿容器 */
-    .calendar-fill-container {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        z-index: -1;
-        opacity: 0.85;
-    }
-
-    .fill-segment {
-        width: 100%;
-        transition: height 0.3s ease;
-    }
-
-    .fill-available {
-        background-color: rgba(25, 135, 84, 0.35);
-    }
-
-    .fill-maybe {
-        background-color: rgba(255, 193, 7, 0.35);
-    }
-
-    .fill-busy {
-        background-color: rgba(220, 53, 69, 0.35);
-    }
-
-    .fill-unset {
-        background-color: rgba(108, 117, 125, 0.15);
-    }
-
-    /* 深色模式調色 */
-    [data-bs-theme="dark"] .fill-available {
-        background-color: rgba(16, 185, 129, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-maybe {
-        background-color: rgba(245, 158, 11, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-busy {
-        background-color: rgba(239, 68, 68, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-unset {
-        background-color: rgba(71, 85, 105, 0.2);
     }
 
     .team-calendar-day-card.other-month {
@@ -90,13 +39,13 @@
     }
 
     .team-calendar-day-card.today {
-        border: 2px solid #4f46e5 !important;
+        border: 2px solid var(--accent) !important;
     }
 
     .candidate-flag {
         font-size: 0.75rem;
-        background-color: #6366f1;
-        color: white;
+        background-color: var(--accent);
+        color: var(--text-on-accent);
         padding: 2px 6px;
         border-radius: 6px;
         font-weight: bold;

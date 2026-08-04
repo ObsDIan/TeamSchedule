@@ -67,31 +67,52 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
+        const THEME_KEY = "theme";
+
+        function getSystemTheme() {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+
+        function getSavedTheme() {
+            return localStorage.getItem(THEME_KEY) || "auto";
+        }
+
+        function resolveTheme(theme) {
+            return theme === "auto" ? getSystemTheme() : theme;
+        }
+
         function applyTheme(theme) {
-            document.documentElement.setAttribute('data-bs-theme', theme);
+            const resolved = resolveTheme(theme);
+            document.documentElement.setAttribute("data-bs-theme", resolved);
+
             const btn = document.getElementById('themeToggleBtn');
             if (btn) {
-                if (theme === 'dark') {
+                if (resolved === 'dark') {
                     btn.innerHTML = '☀️ 淺色模式';
-                    btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+                    btn.className = 'btn btn-outline-warning btn-sm theme-toggle-btn me-3';
                 } else {
                     btn.innerHTML = '🌙 深色模式';
-                    btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+                    btn.className = 'btn btn-outline-secondary btn-sm theme-toggle-btn me-3';
                 }
             }
         }
 
         function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
-            const next = current === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', next);
+            const current = document.documentElement.getAttribute("data-bs-theme") || "light";
+            const next = current === "dark" ? "light" : "dark";
+            localStorage.setItem(THEME_KEY, next);
             applyTheme(next);
         }
 
-        // DOM 載入後同步按鈕圖示與文字
+        const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        systemThemeQuery.addEventListener("change", () => {
+            if (getSavedTheme() === "auto") {
+                applyTheme("auto");
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
-            applyTheme(currentTheme);
+            applyTheme(getSavedTheme());
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

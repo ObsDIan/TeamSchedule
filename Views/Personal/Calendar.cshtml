@@ -13,43 +13,23 @@
         gap: 8px;
     }
 
-    .calendar-day-header {
-        text-align: center;
-        font-weight: 600;
-        padding: 10px;
-        background: rgba(248, 249, 250, 0.8);
-        border-radius: 8px;
-        color: #495057;
-    }
-
     .calendar-day-card {
         min-height: 110px;
-        border: 1px solid #e9ecef;
         border-radius: 12px;
         padding: 10px;
         position: relative;
-        background-color: #ffffff;
-        transition: all 0.2s ease-in-out;
         cursor: pointer;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
 
-    .calendar-day-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border-color: #4f46e5;
-    }
-
     .calendar-day-card.other-month {
         opacity: 0.45;
-        background-color: #f8f9fa;
     }
 
     .calendar-day-card.today {
-        border: 2px solid #4f46e5 !important;
-        background-color: #f0f3ff;
+        border: 2px solid var(--accent) !important;
     }
 
     .status-badge {
@@ -60,30 +40,10 @@
         display: inline-block;
     }
 
-    .bg-available {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-
-    .bg-busy {
-        background-color: #f8d7da;
-        color: #842029;
-    }
-
-    .bg-maybe {
-        background-color: #fff3cd;
-        color: #664d03;
-    }
-
-    .bg-unset {
-        background-color: #e2e3e5;
-        color: #41464b;
-    }
-
     .confirmed-activity-tag {
         font-size: 0.75rem;
-        background-color: #dc3545;
-        color: white;
+        background-color: var(--danger);
+        color: var(--text-on-accent);
         padding: 3px 6px;
         border-radius: 6px;
         margin-top: 4px;
