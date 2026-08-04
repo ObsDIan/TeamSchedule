@@ -1,3 +1,5 @@
+@model TeamSchedule.ViewModels.HomeDashboardViewModel
+@using TeamSchedule.Models
 @{
     ViewData["Title"] = "WhenFree｜找出大家都有空的那一天";
 }
@@ -41,65 +43,31 @@
                 <section class="app-card preview-card" aria-labelledby="previewTitle">
                     <div class="d-flex justify-content-between align-items-center mb-3 mini-toolbar">
                         <div>
-                            <div class="small muted">羽球社・八月聚會</div>
-                            <h2 class="h5 mb-0 fw-bold" id="previewTitle">團隊可用日期</h2>
+                            <div class="small muted">@(Model.FeaturedTeamName ?? "團隊預覽")・@(Model.FeaturedActivityTitle ?? "可用日期")</div>
+                            <h2 class="h5 mb-0 fw-bold" id="previewTitle">團隊可用日期統計</h2>
                         </div>
                         <span class="status-pill status-open">
                             <i class="bi bi-hourglass-split"></i>
-                            回覆中
+                            實時計算中
                         </span>
                     </div>
 
                     <div class="calendar-preview">
-                        <article class="calendar-day">
-                            <div class="calendar-day__header">
-                                <div class="calendar-day__date">8/15</div>
-                                <div class="calendar-day__meta">有空 5／10</div>
-                            </div>
-                            <div class="calendar-day__fill" aria-label="有空 50%，忙碌 20%，不確定 10%，未設定 20%">
-                                <div class="fill-unset" style="height:20%"></div>
-                                <div class="fill-busy" style="height:20%"></div>
-                                <div class="fill-maybe" style="height:10%"></div>
-                                <div class="fill-available" style="height:50%"></div>
-                            </div>
-                        </article>
-
-                        <article class="calendar-day recommended">
-                            <div class="calendar-day__header">
-                                <div class="calendar-day__date">8/16</div>
-                                <div class="calendar-day__meta">有空 8／10</div>
-                            </div>
-                            <div class="calendar-day__fill" aria-label="有空 80%，忙碌 10%，不確定 10%">
-                                <div class="fill-busy" style="height:10%"></div>
-                                <div class="fill-maybe" style="height:10%"></div>
-                                <div class="fill-available" style="height:80%"></div>
-                            </div>
-                        </article>
-
-                        <article class="calendar-day">
-                            <div class="calendar-day__header">
-                                <div class="calendar-day__date">8/22</div>
-                                <div class="calendar-day__meta">有空 6／10</div>
-                            </div>
-                            <div class="calendar-day__fill" aria-label="有空 60%，忙碌 30%，未設定 10%">
-                                <div class="fill-unset" style="height:10%"></div>
-                                <div class="fill-busy" style="height:30%"></div>
-                                <div class="fill-available" style="height:60%"></div>
-                            </div>
-                        </article>
-
-                        <article class="calendar-day">
-                            <div class="calendar-day__header">
-                                <div class="calendar-day__date">8/23</div>
-                                <div class="calendar-day__meta">有空 4／10</div>
-                            </div>
-                            <div class="calendar-day__fill" aria-label="有空 40%，忙碌 40%，不確定 10%，未設定 10%">
-                                <div class="fill-unset" style="height:10%"></div>
-                                <div class="fill-busy" style="height:40%"></div>
-                                <div class="fill-maybe" style="height:10%"></div>
-                                <div class="fill-available" style="height:40%"></div>
-                            </div>
-                        </article>
+                        @foreach (var cand in Model.PreviewCandidateDates)
+                        {
+                            <article class="calendar-day @(cand.IsRecommended ? "recommended" : "")">
+                                <div class="calendar-day__header">
+                                    <div class="calendar-day__date">@cand.Date.ToString("M/d")</div>
+                                    <div class="calendar-day__meta">有空 @cand.AvailableCount／@cand.TotalMembersCount</div>
+                                </div>
+                                <div class="calendar-day__fill" aria-label="有空 @cand.AvailablePercent%，忙碌 @cand.BusyPercent%，不確定 @cand.MaybePercent%，未設定 @cand.UnsetPercent%">
+                                    <div class="fill-unset" style="height:@cand.UnsetPercent%"></div>
+                                    <div class="fill-busy" style="height:@cand.BusyPercent%"></div>
+                                    <div class="fill-maybe" style="height:@cand.MaybePercent%"></div>
+                                    <div class="fill-available" style="height:@cand.AvailablePercent%"></div>
+                                </div>
+                            </article>
+                        }
                     </div>
 
                     <div class="d-flex flex-wrap gap-3 mt-3">
@@ -159,23 +127,23 @@
                 <div class="app-card p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <div class="small muted">我的團隊</div>
-                            <h2 class="section-title h4 mb-0">團隊排程概況</h2>
+                            <div class="small muted">我的團隊統計</div>
+                            <h2 class="section-title h4 mb-0">@(Model.IsAuthenticated ? $"已加入 {Model.MyTeamsCount} 個團隊" : "團隊排程概況")</h2>
                         </div>
                         <i class="bi bi-people fs-3 text-primary"></i>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-4">
-                            <div class="metric-value">3</div>
+                            <div class="metric-value">@Model.MyTeamsCount</div>
                             <div class="small muted mt-2">團隊</div>
                         </div>
                         <div class="col-4">
-                            <div class="metric-value">2</div>
+                            <div class="metric-value">@Model.OpenActivitiesCount</div>
                             <div class="small muted mt-2">回覆中</div>
                         </div>
                         <div class="col-4">
-                            <div class="metric-value">1</div>
+                            <div class="metric-value">@Model.ConfirmedActivitiesCount</div>
                             <div class="small muted mt-2">已確認</div>
                         </div>
                     </div>
@@ -193,68 +161,57 @@
                 <div class="app-card p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
-                            <div class="small muted">近期活動</div>
-                            <h2 class="section-title h4 mb-0">需要你處理的活動</h2>
+                            <div class="small muted">近期活動態勢</div>
+                            <h2 class="section-title h4 mb-0">最新活動列表</h2>
                         </div>
-                        <a asp-controller="Team" asp-action="Index" class="text-decoration-none fw-semibold">全部活動</a>
+                        <a asp-controller="Team" asp-action="Index" class="text-decoration-none fw-semibold">查看全部</a>
                     </div>
 
-                    <div class="activity-item">
-                        <div class="activity-date">
-                            <span>16</span>
-                            <small>八月</small>
+                    @if (!Model.RecentActivities.Any())
+                    {
+                        <div class="text-center py-4 muted">
+                            <i class="bi bi-calendar-event fs-2 d-block mb-2"></i>
+                            尚無近期活動，點擊左側「建立團隊」發起新活動！
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex flex-wrap justify-content-between gap-2">
-                                <div>
-                                    <h3 class="h6 mb-1 fw-bold">羽球社八月聚會</h3>
-                                    <div class="small muted">羽球社・候選日期 4 天</div>
+                    }
+                    else
+                    {
+                        @foreach (var act in Model.RecentActivities)
+                        {
+                            <div class="activity-item">
+                                <div class="activity-date">
+                                    <span>@(act.DisplayDate?.Day.ToString() ?? "--")</span>
+                                    <small>@(act.DisplayDate?.ToString("M月") ?? "--")</small>
                                 </div>
-                                <span class="status-pill status-open">
-                                    <i class="bi bi-pencil-square"></i>
-                                    等待回覆
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-date">
-                            <span>23</span>
-                            <small>八月</small>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex flex-wrap justify-content-between gap-2">
-                                <div>
-                                    <h3 class="h6 mb-1 fw-bold">大學同學聚餐</h3>
-                                    <div class="small muted">大學同學・你已選擇參加</div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <div>
+                                            <h3 class="h6 mb-1 fw-bold">
+                                                <a asp-controller="Team" asp-action="ActivityDetail" asp-route-id="@act.ActivityId" class="text-decoration-none text-body">
+                                                    @act.ActivityTitle
+                                                </a>
+                                            </h3>
+                                            <div class="small muted">@act.TeamName ・ @(act.Status == ActivityStatus.Confirmed ? "活動已定案" : $"候選日期 {act.CandidateCount} 天")</div>
+                                        </div>
+                                        @if (act.Status == ActivityStatus.Confirmed)
+                                        {
+                                            <span class="status-pill status-confirmed">
+                                                <i class="bi bi-check-circle"></i>
+                                                已定案
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-pill status-open">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                @act.StatusText
+                                            </span>
+                                        }
+                                    </div>
                                 </div>
-                                <span class="status-pill status-confirmed">
-                                    <i class="bi bi-check-circle"></i>
-                                    已確認
-                                </span>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-date">
-                            <span>30</span>
-                            <small>八月</small>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex flex-wrap justify-content-between gap-2">
-                                <div>
-                                    <h3 class="h6 mb-1 fw-bold">家族一日遊</h3>
-                                    <div class="small muted">家庭群組・尚有 2 人未回覆</div>
-                                </div>
-                                <span class="status-pill status-open">
-                                    <i class="bi bi-people"></i>
-                                    回覆中
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                        }
+                    }
                 </div>
             </div>
         </div>
