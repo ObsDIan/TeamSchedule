@@ -283,8 +283,9 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
     public async Task SetDateOverrideAsync(string userId, DateTime date, AvailabilityStatus? status, string? note = null)
     {
         var dateOnly = date.Date;
+        var nextDate = dateOnly.AddDays(1);
         var existing = await context.UserDateOverrides
-            .FirstOrDefaultAsync(o => o.UserId == userId && o.TargetDate.Date == dateOnly);
+            .FirstOrDefaultAsync(o => o.UserId == userId && o.TargetDate >= dateOnly && o.TargetDate < nextDate);
 
         if (status == null)
         {

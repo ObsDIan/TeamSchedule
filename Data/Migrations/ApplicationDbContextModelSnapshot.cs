@@ -178,7 +178,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("ActivityId", "CandidateDate")
                         .IsUnique();
 
-                    b.ToTable("ActivityCandidateDates");
+                    b.ToTable("ActivityCandidateDates", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.ActivityParticipant", b =>
@@ -212,7 +212,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("ActivityId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("ActivityParticipants");
+                    b.ToTable("ActivityParticipants", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.ActivityResponse", b =>
@@ -248,7 +248,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("ActivityId", "CandidateDateId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("ActivityResponses");
+                    b.ToTable("ActivityResponses", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.ApplicationUser", b =>
@@ -362,7 +362,7 @@ namespace TeamSchedule.Data.Migrations
 
                     b.HasIndex("OwnerUserId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.TeamActivity", b =>
@@ -405,7 +405,7 @@ namespace TeamSchedule.Data.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("TeamActivities");
+                    b.ToTable("TeamActivities", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.TeamMember", b =>
@@ -436,7 +436,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("TeamId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("TeamMembers");
+                    b.ToTable("TeamMembers", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.UserDateOverride", b =>
@@ -468,7 +468,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("UserId", "TargetDate")
                         .IsUnique();
 
-                    b.ToTable("UserDateOverrides");
+                    b.ToTable("UserDateOverrides", (string)null);
                 });
 
             modelBuilder.Entity("TeamSchedule.Models.UserWeeklyAvailability", b =>
@@ -497,7 +497,7 @@ namespace TeamSchedule.Data.Migrations
                     b.HasIndex("UserId", "DayOfWeek")
                         .IsUnique();
 
-                    b.ToTable("UserWeeklyAvailabilities");
+                    b.ToTable("UserWeeklyAvailabilities", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

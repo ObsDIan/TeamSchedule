@@ -311,14 +311,19 @@ public class TeamService(
             .Select(r => r.UserId)
             .ToListAsync();
 
-        // Clear existing participants
+        // Clear existing participants first to avoid EF Core INSERT-before-DELETE unique index violation
         var oldParticipants = await context.ActivityParticipants
             .Where(p => p.ActivityId == activityId)
             .ToListAsync();
-        context.ActivityParticipants.RemoveRange(oldParticipants);
+        if (oldParticipants.Any())
+        {
+            context.ActivityParticipants.RemoveRange(oldParticipants);
+            await context.SaveChangesAsync();
+        }
 
-        // Add new participants
-        foreach (var jUserId in joinedUserIds)
+        // Add new distinct participants
+        var distinctJoinedUserIds = joinedUserIds.Distinct().ToList();
+        foreach (var jUserId in distinctJoinedUserIds)
         {
             context.ActivityParticipants.Add(new ActivityParticipant
             {
