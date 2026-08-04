@@ -46,6 +46,7 @@ public class TeamCalendarDayViewModel
 
     public AvailabilityStatus? MyStatus { get; set; }
     public bool IsCandidateDate { get; set; }
+    public bool IsConfirmedDate { get; set; }
     public long? ActivityId { get; set; }
     public string? ActivityTitle { get; set; }
 

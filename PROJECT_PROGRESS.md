@@ -7,7 +7,7 @@
 | **階段 1** | 基礎專案架構與 SQL Server EF Core 模型建立 | ✅ 已完成 | ASP.NET Core MVC 10.0、Identity整合、Models、DbContext、EF Migrations 及 LocalDB 建立。 |
 | **階段 2** | 核心時間狀態計算與月曆算表服務 | ✅ 已完成 | `IAvailabilityService`、`AvailabilityService` (四層狀態優先判定、個人月曆與團隊 4 色比例算表)。 |
 | **階段 3** | 個人月曆與每週預設設定頁面 (UI/UX) | ✅ 已完成 | `PersonalController`、`Calendar.cshtml` (CSS Grid + Modal AJAX 異動)、`WeeklySetup.cshtml`、**全站深色模式切換 (Dark Mode)**。 |
-| **階段 4** | 團隊管理、活動排程與 4 色比例累積月曆 | ✅ 已完成 | `TeamService`、`TeamController`、團隊建立與 6 位邀請碼、活動發起、投票矩陣與 **4 色由下而上比例累積月曆 (Visual Fill)**。 |
+| **階段 4** | 團隊管理、活動排程與 4 色比例累積月曆 | ✅ 已完成 | `TeamService`、`TeamController`、團隊建立與 6 位邀請碼、活動發起、投票矩陣、**活動定案視覺優化（隱藏未選候選日、新增二次確認刪除按鈕）** 與 **4 色由下而上比例累積月曆 (Visual Fill)**。 |
 
 ---
 

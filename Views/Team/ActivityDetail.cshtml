@@ -1,7 +1,12 @@
 @model TeamSchedule.ViewModels.ActivityDetailViewModel
 @using TeamSchedule.Models
 @{
-    ViewData["Title"] = Model.Title + " - 活動回覆與統計";
+    ViewData["Title"] = Model.Title + " - 活動明細與回覆統計";
+
+    // 若活動已確定，僅展示選定的 FinalDate 候選日期；否則展示所有候選日期
+    var displayDates = Model.Status == ActivityStatus.Confirmed && Model.FinalDate.HasValue
+        ? Model.CandidateDates.Where(c => c.CandidateDate.Date == Model.FinalDate.Value.Date).ToList()
+        : Model.CandidateDates;
 }
 
 <div class="container py-4">
@@ -27,12 +32,12 @@
 
         <div class="d-flex gap-2">
             <a asp-action="Detail" asp-route-id="@Model.TeamId" class="btn btn-outline-secondary rounded-pill px-3">&laquo; 返回團隊 Dashboard</a>
-            @if (Model.IsOwner && Model.Status == ActivityStatus.Open)
+            @if (Model.IsOwner && Model.Status != ActivityStatus.Cancelled)
             {
-                <form asp-action="CancelActivity" method="post" onsubmit="return confirm('確定要取消此活動嗎？');">
+                <form asp-action="CancelActivity" method="post" onsubmit="return confirm('⚠️ 確定要刪除/取消此活動嗎？\n\n刪除活動後，系統將會自動解除對所有參加成員該日期的占用狀態！');">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="activityId" value="@Model.ActivityId" />
-                    <button type="submit" class="btn btn-outline-danger rounded-pill px-3">取消活動</button>
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-3">🗑️ 刪除活動</button>
                 </form>
             }
         </div>
@@ -46,13 +51,21 @@
         </div>
     }
 
-    <!-- 候選日期與個人回覆卡片列表 -->
+    <!-- 候選日期 / 已確定日期卡片列表 -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
-            <h4 class="fw-bold mb-3">🗳️ 候選日期投票與意願調查</h4>
+            @if (Model.Status == ActivityStatus.Confirmed)
+            {
+                <h4 class="fw-bold mb-1">🎉 已確定活動日期</h4>
+                <p class="text-muted small mb-3">活動已定案，其他未選定的候選日期已自動隱藏，無法再變更或投票。</p>
+            }
+            else
+            {
+                <h4 class="fw-bold mb-3">🗳️ 候選日期投票與意願調查</h4>
+            }
 
             <div class="row g-3">
-                @foreach (var cand in Model.CandidateDates)
+                @foreach (var cand in displayDates)
                 {
                     var isConfirmedDate = Model.Status == ActivityStatus.Confirmed && Model.FinalDate?.Date == cand.CandidateDate.Date;
 
@@ -63,7 +76,7 @@
                                     <h5 class="fw-bold mb-0 text-primary">📅 @cand.CandidateDate.ToString("yyyy-MM-dd (ddd)")</h5>
                                     @if (isConfirmedDate)
                                     {
-                                        <span class="badge bg-success rounded-pill">最終日期</span>
+                                        <span class="badge bg-success rounded-pill">最終定案日期</span>
                                     }
                                 </div>
 
@@ -120,9 +133,15 @@
                     <thead class="table-light">
                         <tr>
                             <th>成員名稱</th>
-                            @foreach (var cand in Model.CandidateDates)
+                            @foreach (var cand in displayDates)
                             {
-                                <th class="text-center">@cand.CandidateDate.ToString("MM/dd (ddd)")</th>
+                                <th class="text-center">
+                                    @cand.CandidateDate.ToString("MM/dd (ddd)")
+                                    @if (Model.Status == ActivityStatus.Confirmed)
+                                    {
+                                        <span class="badge bg-success ms-1">已確認定案</span>
+                                    }
+                                </th>
                             }
                         </tr>
                     </thead>
@@ -131,7 +150,7 @@
                         {
                             <tr>
                                 <td class="fw-bold">@mem.DisplayName</td>
-                                @foreach (var cand in Model.CandidateDates)
+                                @foreach (var cand in displayDates)
                                 {
                                     var resp = mem.Responses.ContainsKey(cand.CandidateDateId) ? mem.Responses[cand.CandidateDateId] : (ActivityResponseStatus?)null;
 

@@ -164,10 +164,23 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
                         p.Activity.FinalDate.Value <= calendarEnd)
             .ToListAsync();
 
-        // Candidate dates for team activities
+        // Candidate dates for OPEN team activities
         var candidateDates = await context.ActivityCandidateDates
             .Include(c => c.Activity)
-            .Where(c => c.Activity != null && c.Activity.TeamId == teamId && c.CandidateDate >= calendarStart && c.CandidateDate <= calendarEnd)
+            .Where(c => c.Activity != null &&
+                        c.Activity.TeamId == teamId &&
+                        c.Activity.Status == ActivityStatus.Open &&
+                        c.CandidateDate >= calendarStart &&
+                        c.CandidateDate <= calendarEnd)
+            .ToListAsync();
+
+        // Confirmed team activities on final date
+        var confirmedTeamActivities = await context.TeamActivities
+            .Where(a => a.TeamId == teamId &&
+                        a.Status == ActivityStatus.Confirmed &&
+                        a.FinalDate.HasValue &&
+                        a.FinalDate.Value >= calendarStart &&
+                        a.FinalDate.Value <= calendarEnd)
             .ToListAsync();
 
         var model = new TeamCalendarMonthViewModel
@@ -241,6 +254,7 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
                 }
             }
 
+            var confirmedAct = confirmedTeamActivities.FirstOrDefault(a => a.FinalDate?.Date == date);
             var dayCandidate = candidateDates.FirstOrDefault(c => c.CandidateDate.Date == date);
 
             var dayModel = new TeamCalendarDayViewModel
@@ -254,9 +268,10 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
                 UnsetCount = unsetCount,
                 TotalMemberCount = totalMemberCount,
                 MyStatus = currentUserStatusOnDate,
-                IsCandidateDate = dayCandidate != null,
-                ActivityId = dayCandidate?.ActivityId,
-                ActivityTitle = dayCandidate?.Activity?.Title
+                IsConfirmedDate = confirmedAct != null,
+                IsCandidateDate = confirmedAct == null && dayCandidate != null,
+                ActivityId = confirmedAct?.ActivityId ?? dayCandidate?.ActivityId,
+                ActivityTitle = confirmedAct?.Title ?? dayCandidate?.Activity?.Title
             };
 
             model.Days.Add(dayModel);

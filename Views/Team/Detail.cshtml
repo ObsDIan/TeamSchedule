@@ -194,9 +194,13 @@
 
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold fs-6">@day.Date.Day</span>
-                                @if (day.IsCandidateDate)
+                                @if (day.IsConfirmedDate)
                                 {
-                                    <span class="candidate-flag" title="此日期為活動候選日期">📍 候選</span>
+                                    <span class="badge bg-success" title="此日期有已確認的活動">🎉 已定案</span>
+                                }
+                                else if (day.IsCandidateDate)
+                                {
+                                    <span class="candidate-flag" title="此日期為進行中活動候選日期">📍 候選</span>
                                 }
                             </div>
 
@@ -207,9 +211,10 @@
                                     <span class="text-warning ms-1">🟡 @day.MaybeCount</span>
                                 </div>
 
-                                @if (day.IsCandidateDate && day.ActivityId.HasValue)
+                                @if (day.ActivityId.HasValue)
                                 {
-                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge bg-primary text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle">
+                                    var badgeBg = day.IsConfirmedDate ? "bg-success" : "bg-primary";
+                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge @badgeBg text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle">
                                         👉 @day.ActivityTitle
                                     </a>
                                 }
