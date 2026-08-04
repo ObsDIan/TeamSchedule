@@ -1,0 +1,30 @@
+## Visual Studio / .NET
+bin/
+obj/
+.vs/
+.idea/
+.vscode/
+
+## User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+## Build outputs
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Ob]j/
+
+## Environment / Secrets / OS files
+*.env
+*.log
+.DS_Store
+Thumbs.db
