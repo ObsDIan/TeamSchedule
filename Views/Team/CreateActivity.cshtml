@@ -1,0 +1,73 @@
+@model TeamSchedule.ViewModels.CreateActivityViewModel
+@{
+    ViewData["Title"] = "建立團隊活動排程";
+}
+
+<div class="container py-4" style="max-width: 650px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">➕ 建立團隊活動排程</h2>
+            <p class="text-muted mb-0">團隊：<strong>@Model.TeamName</strong></p>
+        </div>
+        <a asp-action="Detail" asp-route-id="@Model.TeamId" class="btn btn-outline-secondary rounded-pill px-3">&laquo; 返回</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <form asp-action="CreateActivity" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="TeamId" />
+                <input type="hidden" asp-for="TeamName" />
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-bold">活動名稱：</label>
+                    <input asp-for="Title" class="form-control rounded-3 py-2" placeholder="例如：8 月羽球聚會、夏日烤肉趴..." />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">活動說明 (選填)：</label>
+                    <textarea asp-for="Description" class="form-control rounded-3" rows="3" placeholder="註明地點、預計時間或注意事項..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="CandidateDatesInput" class="form-label fw-bold">候選日期 (請選擇或輸入多個日期)：</label>
+                    <div class="input-group mb-2">
+                        <input type="date" id="datePicker" class="form-control rounded-start-3" />
+                        <button type="button" class="btn btn-outline-primary rounded-end-3 px-4" onclick="addSelectedDate()">加入日期</button>
+                    </div>
+
+                    <textarea asp-for="CandidateDatesInput" id="candidateDatesText" class="form-control rounded-3 font-monospace" rows="4" placeholder="例：2026-08-15, 2026-08-22, 2026-08-29 (多個日期請用逗號隔開)"></textarea>
+                    <span asp-validation-for="CandidateDatesInput" class="text-danger small"></span>
+                    <small class="text-muted d-block mt-1">提示：您可以使用日期選擇器逐步加入，或是直接在文字區塊貼上日期清單。</small>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold fs-6">發起活動意願調查</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function addSelectedDate() {
+            const picker = document.getElementById('datePicker');
+            const textArea = document.getElementById('candidateDatesText');
+
+            if (!picker.value) return;
+
+            let current = textArea.value.trim();
+            if (current.length > 0) {
+                if (!current.includes(picker.value)) {
+                    textArea.value = current + ', ' + picker.value;
+                }
+            } else {
+                textArea.value = picker.value;
+            }
+            picker.value = '';
+        }
+    </script>
+}

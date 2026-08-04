@@ -1,0 +1,29 @@
+@model TeamSchedule.ViewModels.JoinTeamViewModel
+@{
+    ViewData["Title"] = "加入團隊";
+}
+
+<div class="container py-4" style="max-width: 500px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">🔑 輸入邀請碼加入團隊</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">&laquo; 返回</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <form asp-action="Join" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-4">
+                    <label asp-for="InviteCode" class="form-label fw-bold">6 位數團隊邀請碼：</label>
+                    <input asp-for="InviteCode" class="form-control rounded-3 py-2 text-center text-uppercase fs-4 font-monospace tracking-wider" placeholder="例：A1B2C3" maxlength="10" />
+                    <span asp-validation-for="InviteCode" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold fs-6">驗證邀請碼並加入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

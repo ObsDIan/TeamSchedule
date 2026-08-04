@@ -1,0 +1,189 @@
+@model TeamSchedule.ViewModels.ActivityDetailViewModel
+@using TeamSchedule.Models
+@{
+    ViewData["Title"] = Model.Title + " - 活動回覆與統計";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h2 class="fw-bold text-dark mb-0">📌 @Model.Title</h2>
+                @if (Model.Status == ActivityStatus.Open)
+                {
+                    <span class="badge bg-warning text-dark fs-6 rounded-pill">回覆調查中</span>
+                }
+                else if (Model.Status == ActivityStatus.Confirmed)
+                {
+                    <span class="badge bg-success fs-6 rounded-pill">已定案：@Model.FinalDate?.ToString("yyyy-MM-dd (ddd)")</span>
+                }
+                else if (Model.Status == ActivityStatus.Cancelled)
+                {
+                    <span class="badge bg-secondary fs-6 rounded-pill">已取消</span>
+                }
+            </div>
+            <p class="text-muted mb-0">團隊：<a asp-action="Detail" asp-route-id="@Model.TeamId" class="text-decoration-none">@Model.TeamName</a> | @(string.IsNullOrEmpty(Model.Description) ? "無說明" : Model.Description)</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-action="Detail" asp-route-id="@Model.TeamId" class="btn btn-outline-secondary rounded-pill px-3">&laquo; 返回團隊 Dashboard</a>
+            @if (Model.IsOwner && Model.Status == ActivityStatus.Open)
+            {
+                <form asp-action="CancelActivity" method="post" onsubmit="return confirm('確定要取消此活動嗎？');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="activityId" value="@Model.ActivityId" />
+                    <button type="submit" class="btn btn-outline-danger rounded-pill px-3">取消活動</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            ✅ @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- 候選日期與個人回覆卡片列表 -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h4 class="fw-bold mb-3">🗳️ 候選日期投票與意願調查</h4>
+
+            <div class="row g-3">
+                @foreach (var cand in Model.CandidateDates)
+                {
+                    var isConfirmedDate = Model.Status == ActivityStatus.Confirmed && Model.FinalDate?.Date == cand.CandidateDate.Date;
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-1 @(isConfirmedDate ? "border-success bg-success-subtle" : "border-light-subtle") shadow-sm rounded-3 p-3 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="fw-bold mb-0 text-primary">📅 @cand.CandidateDate.ToString("yyyy-MM-dd (ddd)")</h5>
+                                    @if (isConfirmedDate)
+                                    {
+                                        <span class="badge bg-success rounded-pill">最終日期</span>
+                                    }
+                                </div>
+
+                                <div class="d-flex gap-2 my-2 small">
+                                    <span class="badge bg-success">🟢 參加：@cand.JoinCount 人</span>
+                                    <span class="badge bg-warning text-dark">🟡 不確定：@cand.MaybeCount 人</span>
+                                    <span class="badge bg-danger">🔴 不參加：@cand.DeclineCount 人</span>
+                                </div>
+                            </div>
+
+                            @if (Model.Status == ActivityStatus.Open)
+                            {
+                                <div class="mt-3 border-top pt-3">
+                                    <label class="form-label small text-muted d-block mb-2">您的意願：</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-success @(cand.MyResponse == ActivityResponseStatus.Join ? "active" : "")" onclick="voteDate(@Model.ActivityId, @cand.CandidateDateId, 1)">
+                                            參加
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning @(cand.MyResponse == ActivityResponseStatus.Maybe ? "active" : "")" onclick="voteDate(@Model.ActivityId, @cand.CandidateDateId, 3)">
+                                            不確定
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger @(cand.MyResponse == ActivityResponseStatus.Decline ? "active" : "")" onclick="voteDate(@Model.ActivityId, @cand.CandidateDateId, 2)">
+                                            不參加
+                                        </button>
+                                    </div>
+
+                                    @if (Model.IsOwner)
+                                    {
+                                        <div class="mt-3">
+                                            <form asp-action="ConfirmActivity" method="post" onsubmit="return confirm('確定要選定 @cand.CandidateDate.ToString("yyyy-MM-dd") 為最終活動日期嗎？選後將自動回寫參加成員的個人狀態為忙碌。');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="activityId" value="@Model.ActivityId" />
+                                                <input type="hidden" name="candidateDateId" value="@cand.CandidateDateId" />
+                                                <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill fw-bold">🎯 選定為最終日期</button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- 成員回覆對照矩陣表 -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <h4 class="fw-bold mb-3">👥 全體成員回覆矩陣對照表</h4>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>成員名稱</th>
+                            @foreach (var cand in Model.CandidateDates)
+                            {
+                                <th class="text-center">@cand.CandidateDate.ToString("MM/dd (ddd)")</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mem in Model.MemberResponses)
+                        {
+                            <tr>
+                                <td class="fw-bold">@mem.DisplayName</td>
+                                @foreach (var cand in Model.CandidateDates)
+                                {
+                                    var resp = mem.Responses.ContainsKey(cand.CandidateDateId) ? mem.Responses[cand.CandidateDateId] : (ActivityResponseStatus?)null;
+
+                                    <td class="text-center">
+                                        @if (resp == ActivityResponseStatus.Join)
+                                        {
+                                            <span class="badge bg-success">🟢 參加</span>
+                                        }
+                                        else if (resp == ActivityResponseStatus.Decline)
+                                        {
+                                            <span class="badge bg-danger">🔴 不參加</span>
+                                        }
+                                        else if (resp == ActivityResponseStatus.Maybe)
+                                        {
+                                            <span class="badge bg-warning text-dark">🟡 不確定</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">未回覆</span>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function voteDate(activityId, candidateDateId, statusVal) {
+            const response = await fetch('/Team/RespondActivity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    activityId: activityId,
+                    candidateDateId: candidateDateId,
+                    responseStatus: statusVal
+                })
+            });
+
+            const res = await response.json();
+            if (res.success) {
+                window.location.reload();
+            } else {
+                alert('投票失敗：' + (res.message || '請稍後再試'));
+            }
+        }
+    </script>
+}

@@ -1,0 +1,35 @@
+@model TeamSchedule.ViewModels.CreateTeamViewModel
+@{
+    ViewData["Title"] = "建立新團隊";
+}
+
+<div class="container py-4" style="max-width: 600px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">➕ 建立新團隊</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3">&laquo; 返回團隊列表</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="TeamName" class="form-label fw-bold">團隊名稱：</label>
+                    <input asp-for="TeamName" class="form-control rounded-3 py-2" placeholder="例如：週末羽球社、大學同學會..." />
+                    <span asp-validation-for="TeamName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label fw-bold">團隊說明 (選填)：</label>
+                    <textarea asp-for="Description" class="form-control rounded-3" rows="3" placeholder="簡短說明這個團隊的目的或成員活動規範..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold fs-6">建立團隊並產生邀請碼</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,86 @@
+@model TeamSchedule.ViewModels.TeamListViewModel
+@{
+    ViewData["Title"] = "我的團隊列表";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">👥 我的團隊</h2>
+            <p class="text-muted mb-0">管理您建立或加入的活動團隊。</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Join" class="btn btn-outline-primary rounded-pill px-3">
+                🔑 輸入邀請碼加入團隊
+            </a>
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                ➕ 建立新團隊
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            ✅ @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.MyTeams.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+            <div class="card-body">
+                <div class="fs-1 mb-3">🤝</div>
+                <h4 class="fw-bold text-dark mb-2">您目前尚未加入任何團隊</h4>
+                <p class="text-muted mb-4">快建立一個新團隊邀請朋友，或使用邀請碼加入團隊吧！</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a asp-action="Join" class="btn btn-outline-primary rounded-pill px-4">輸入邀請碼</a>
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4">建立團隊</a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var team in Model.MyTeams)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 position-relative transition-hover">
+                        <div class="card-body p-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h4 class="fw-bold text-dark mb-0">@team.TeamName</h4>
+                                    @if (team.IsOwner)
+                                    {
+                                        <span class="badge bg-primary rounded-pill">管理者</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">成員</span>
+                                    }
+                                </div>
+
+                                <p class="text-muted small mb-3 text-truncate" style="max-height: 2.8em;">
+                                    @(string.IsNullOrEmpty(team.Description) ? "無說明" : team.Description)
+                                </p>
+                            </div>
+
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-body-tertiary rounded-3 small">
+                                    <span>👥 成員人數：<strong>@team.MemberCount 人</strong></span>
+                                    <span>🔑 邀請碼：<strong class="text-primary font-monospace">@team.InviteCode</strong></span>
+                                </div>
+
+                                <a asp-action="Detail" asp-route-id="@team.TeamId" class="btn btn-outline-primary w-100 rounded-pill fw-semibold">
+                                    進入團隊 Dashboard &raquo;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
