@@ -1,8 +1,262 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "WhenFree｜找出大家都有空的那一天";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="eyebrow">
+                    <i class="bi bi-people"></i>
+                    一次設定，多個團隊共用
+                </span>
+
+                <h1 class="hero-title">
+                    找到大家都有空的那一天。
+                </h1>
+
+                <p class="hero-copy">
+                    平日忙、假日不一定有空，也不用在每個群組重複填寫。
+                    設定一次個人狀態，加入團隊後自動套用；活動確認後，日期立即回寫為忙碌。
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a asp-controller="Personal" asp-action="WeeklySetup" class="btn btn-lg btn-app-primary px-4 rounded-pill fw-bold">
+                        <i class="bi bi-calendar-plus me-2"></i>
+                        設定我的空閒時間
+                    </a>
+                    <a asp-controller="Team" asp-action="Index" class="btn btn-lg btn-app-secondary px-4 rounded-pill fw-bold">
+                        查看團隊狀況
+                    </a>
+                </div>
+
+                <div class="d-flex flex-wrap gap-4 mt-4 small muted">
+                    <span><i class="bi bi-check2-circle me-1 text-success"></i>不必維護多份行事曆</span>
+                    <span><i class="bi bi-check2-circle me-1 text-success"></i>自動避免活動衝突</span>
+                    <span><i class="bi bi-check2-circle me-1 text-success"></i>深淺模式完整支援</span>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <section class="app-card preview-card" aria-labelledby="previewTitle">
+                    <div class="d-flex justify-content-between align-items-center mb-3 mini-toolbar">
+                        <div>
+                            <div class="small muted">羽球社・八月聚會</div>
+                            <h2 class="h5 mb-0 fw-bold" id="previewTitle">團隊可用日期</h2>
+                        </div>
+                        <span class="status-pill status-open">
+                            <i class="bi bi-hourglass-split"></i>
+                            回覆中
+                        </span>
+                    </div>
+
+                    <div class="calendar-preview">
+                        <article class="calendar-day">
+                            <div class="calendar-day__header">
+                                <div class="calendar-day__date">8/15</div>
+                                <div class="calendar-day__meta">有空 5／10</div>
+                            </div>
+                            <div class="calendar-day__fill" aria-label="有空 50%，忙碌 20%，不確定 10%，未設定 20%">
+                                <div class="fill-unset" style="height:20%"></div>
+                                <div class="fill-busy" style="height:20%"></div>
+                                <div class="fill-maybe" style="height:10%"></div>
+                                <div class="fill-available" style="height:50%"></div>
+                            </div>
+                        </article>
+
+                        <article class="calendar-day recommended">
+                            <div class="calendar-day__header">
+                                <div class="calendar-day__date">8/16</div>
+                                <div class="calendar-day__meta">有空 8／10</div>
+                            </div>
+                            <div class="calendar-day__fill" aria-label="有空 80%，忙碌 10%，不確定 10%">
+                                <div class="fill-busy" style="height:10%"></div>
+                                <div class="fill-maybe" style="height:10%"></div>
+                                <div class="fill-available" style="height:80%"></div>
+                            </div>
+                        </article>
+
+                        <article class="calendar-day">
+                            <div class="calendar-day__header">
+                                <div class="calendar-day__date">8/22</div>
+                                <div class="calendar-day__meta">有空 6／10</div>
+                            </div>
+                            <div class="calendar-day__fill" aria-label="有空 60%，忙碌 30%，未設定 10%">
+                                <div class="fill-unset" style="height:10%"></div>
+                                <div class="fill-busy" style="height:30%"></div>
+                                <div class="fill-available" style="height:60%"></div>
+                            </div>
+                        </article>
+
+                        <article class="calendar-day">
+                            <div class="calendar-day__header">
+                                <div class="calendar-day__date">8/23</div>
+                                <div class="calendar-day__meta">有空 4／10</div>
+                            </div>
+                            <div class="calendar-day__fill" aria-label="有空 40%，忙碌 40%，不確定 10%，未設定 10%">
+                                <div class="fill-unset" style="height:10%"></div>
+                                <div class="fill-busy" style="height:40%"></div>
+                                <div class="fill-maybe" style="height:10%"></div>
+                                <div class="fill-available" style="height:40%"></div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 mt-3">
+                        <span class="legend-item"><span class="legend-dot" style="background:var(--success)"></span>有空</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:var(--danger)"></span>忙碌</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:var(--warning)"></span>不確定</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:var(--text-muted)"></span>未設定</span>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="overview">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <h2 class="section-title">今天先做什麼？</h2>
+                <p class="section-subtitle mb-0">從最常用的三個操作開始。</p>
+            </div>
+            <a asp-controller="Personal" asp-action="Calendar" class="text-decoration-none fw-semibold">查看完整行事曆 <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a asp-controller="Personal" asp-action="Calendar" class="app-card quick-card d-block text-decoration-none text-body">
+                    <div class="quick-icon mb-3"><i class="bi bi-calendar-check"></i></div>
+                    <h3 class="h5 fw-bold">設定個人狀態</h3>
+                    <p class="mb-0 muted">設定平日忙碌、假日有空，特殊日期可再單獨覆蓋。</p>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a asp-controller="Team" asp-action="Join" class="app-card quick-card d-block text-decoration-none text-body">
+                    <div class="quick-icon mb-3"><i class="bi bi-person-plus"></i></div>
+                    <h3 class="h5 fw-bold">加入新團隊</h3>
+                    <p class="mb-0 muted">輸入邀請碼即可加入，系統會直接共用你的個人狀態。</p>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a asp-controller="Team" asp-action="Index" class="app-card quick-card d-block text-decoration-none text-body">
+                    <div class="quick-icon mb-3"><i class="bi bi-megaphone"></i></div>
+                    <h3 class="h5 fw-bold">發起新活動</h3>
+                    <p class="mb-0 muted">選擇候選日期，快速看出哪一天最多人有空。</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="teams">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="app-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <div class="small muted">我的團隊</div>
+                            <h2 class="section-title h4 mb-0">團隊排程概況</h2>
+                        </div>
+                        <i class="bi bi-people fs-3 text-primary"></i>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="metric-value">3</div>
+                            <div class="small muted mt-2">團隊</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="metric-value">2</div>
+                            <div class="small muted mt-2">回覆中</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="metric-value">1</div>
+                            <div class="small muted mt-2">已確認</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2">
+                        <a asp-controller="Team" asp-action="Create" class="btn btn-app-primary flex-grow-1 rounded-pill fw-semibold">建立團隊</a>
+                        <a asp-controller="Team" asp-action="Join" class="btn btn-app-secondary flex-grow-1 rounded-pill fw-semibold">使用邀請碼加入</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7" id="activities">
+                <div class="app-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="small muted">近期活動</div>
+                            <h2 class="section-title h4 mb-0">需要你處理的活動</h2>
+                        </div>
+                        <a asp-controller="Team" asp-action="Index" class="text-decoration-none fw-semibold">全部活動</a>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-date">
+                            <span>16</span>
+                            <small>八月</small>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <div>
+                                    <h3 class="h6 mb-1 fw-bold">羽球社八月聚會</h3>
+                                    <div class="small muted">羽球社・候選日期 4 天</div>
+                                </div>
+                                <span class="status-pill status-open">
+                                    <i class="bi bi-pencil-square"></i>
+                                    等待回覆
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-date">
+                            <span>23</span>
+                            <small>八月</small>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <div>
+                                    <h3 class="h6 mb-1 fw-bold">大學同學聚餐</h3>
+                                    <div class="small muted">大學同學・你已選擇參加</div>
+                                </div>
+                                <span class="status-pill status-confirmed">
+                                    <i class="bi bi-check-circle"></i>
+                                    已確認
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="activity-item">
+                        <div class="activity-date">
+                            <span>30</span>
+                            <small>八月</small>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <div>
+                                    <h3 class="h6 mb-1 fw-bold">家族一日遊</h3>
+                                    <div class="small muted">家庭群組・尚有 2 人未回覆</div>
+                                </div>
+                                <span class="status-pill status-open">
+                                    <i class="bi bi-people"></i>
+                                    回覆中
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

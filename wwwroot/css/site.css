@@ -1,34 +1,27 @@
 /* ==========================================================================
-   TeamSchedule 前端色彩與深淺色模式設計規範 (AI 開發規範實作)
+   TeamSchedule 全站統一設計系統與 Theme Tokens
+   (基於 首頁設計參考.html 與 前端色彩與深淺色模式_AI設計規範.md)
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   6.1 明亮模式 (Light Theme Tokens - Spec Section 6.1)
-   -------------------------------------------------------------------------- */
 :root,
 [data-bs-theme="light"] {
     color-scheme: light;
-
     --canvas: #f5f7fa;
     --surface-1: #ffffff;
     --surface-2: #ffffff;
     --surface-3: #eef2f6;
     --surface-raised: #ffffff;
-
     --text-primary: #17202a;
     --text-secondary: #3f4b59;
     --text-muted: #667382;
     --text-disabled: #929ca7;
     --text-on-accent: #ffffff;
-
     --border-subtle: #d9e0e7;
     --border-strong: #aeb9c5;
-
     --accent: #0b62d6;
     --accent-hover: #094fae;
     --accent-active: #073f8b;
     --accent-soft: #e7f0ff;
-
     --success: #18794e;
     --success-soft: #e5f6ed;
     --warning: #8a5700;
@@ -37,14 +30,11 @@
     --danger-soft: #fdebec;
     --info: #096b83;
     --info-soft: #e4f5fa;
-
     --focus-ring: #2563eb;
-
     --shadow-color: 16 24 40;
-    --shadow-sm: 0 1px 3px rgb(var(--shadow-color) / 0.12);
-    --shadow-md: 0 8px 24px rgb(var(--shadow-color) / 0.14);
+    --shadow-sm: 0 1px 3px rgb(16 24 40 / 0.12);
+    --shadow-md: 0 14px 36px rgb(16 24 40 / 0.14);
 
-    /* 10.1 行事曆專用 Token (Spec Section 10.1) */
     --calendar-available-fill: rgb(24 121 78 / 0.34);
     --calendar-available-line: #18794e;
     --calendar-available-text: #0f5132;
@@ -62,32 +52,24 @@
     --calendar-unset-text: #41464b;
 }
 
-/* --------------------------------------------------------------------------
-   6.2 深色模式 (Dark Theme Tokens - Spec Section 6.2)
-   -------------------------------------------------------------------------- */
 [data-bs-theme="dark"] {
     color-scheme: dark;
-
     --canvas: #0f141b;
     --surface-1: #151b23;
     --surface-2: #1b232d;
     --surface-3: #24303d;
     --surface-raised: #293645;
-
     --text-primary: #f4f7fb;
     --text-secondary: #c7d0db;
     --text-muted: #9eabb9;
     --text-disabled: #707d8b;
     --text-on-accent: #ffffff;
-
     --border-subtle: #344150;
     --border-strong: #526274;
-
     --accent: #74a9ff;
     --accent-hover: #91bbff;
     --accent-active: #a9c9ff;
     --accent-soft: #19385f;
-
     --success: #63d69b;
     --success-soft: #143b2b;
     --warning: #f2c464;
@@ -96,14 +78,11 @@
     --danger-soft: #4b2025;
     --info: #67d2e8;
     --info-soft: #133d48;
-
     --focus-ring: #8ab4ff;
-
     --shadow-color: 0 0 0;
-    --shadow-sm: 0 1px 3px rgb(var(--shadow-color) / 0.35);
-    --shadow-md: 0 12px 30px rgb(var(--shadow-color) / 0.45);
+    --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.35);
+    --shadow-md: 0 16px 40px rgb(0 0 0 / 0.45);
 
-    /* 10.1 行事曆專用 Token (Spec Section 10.1) */
     --calendar-available-fill: rgb(99 214 155 / 0.27);
     --calendar-available-line: #63d69b;
     --calendar-available-text: #63d69b;
@@ -121,273 +100,462 @@
     --calendar-unset-text: #c7d0db;
 }
 
-/* --------------------------------------------------------------------------
-   9.1 全域 HTML & Body 基礎 (Spec Section 9.1)
-   -------------------------------------------------------------------------- */
-html {
-  font-size: 14px;
-  position: relative;
-  min-height: 100%;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+* {
+    box-sizing: border-box;
 }
 
 body {
-  margin-bottom: 60px;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif;
-  background-color: var(--canvas) !important;
-  color: var(--text-primary) !important;
-  transition: background-color 0.25s ease, color 0.25s ease;
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 32rem),
+        var(--canvas);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* 9.7 Focus Visible 規範 (Spec Section 9.7) */
-:focus-visible {
-  outline: 3px solid var(--focus-ring) !important;
-  outline-offset: 2px !important;
-}
-
-/* 9.6 連結規範 (Spec Section 9.6) */
 a {
-  color: var(--accent);
-  text-underline-offset: 0.18em;
-  transition: color 0.2s ease;
+    color: var(--accent);
+    text-underline-offset: 0.18em;
+    transition: color 0.2s ease;
 }
 
 a:hover {
-  color: var(--accent-hover);
+    color: var(--accent-hover);
+}
+
+:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
 }
 
 /* --------------------------------------------------------------------------
-   9.2 卡片 (Cards) & 浮層 (Spec Section 9.2)
+   App Navbar & Brand
    -------------------------------------------------------------------------- */
-.card,
-.modal-content,
-.list-group-item,
-.dropdown-menu {
-  background-color: var(--surface-2) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-subtle) !important;
-  box-shadow: var(--shadow-sm);
-  border-radius: 0.75rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+.app-navbar {
+    background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+    border-bottom: 1px solid var(--border-subtle);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md) !important;
-  border-color: var(--border-strong) !important;
-}
-
-/* 毛玻璃 Navbar */
-.glass-navbar {
-  background-color: var(--surface-1) !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.25s ease;
+.brand-mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.75rem;
+    color: white;
+    background: linear-gradient(145deg, var(--accent), #7357ff);
+    box-shadow: var(--shadow-sm);
 }
 
 .nav-link {
-  font-weight: 500;
-  color: var(--text-secondary) !important;
-  transition: color 0.2s ease;
+    color: var(--text-secondary) !important;
+    font-weight: 500;
 }
 
-.nav-link:hover {
-  color: var(--accent) !important;
-}
-
-/* --------------------------------------------------------------------------
-   9.3 表單與輸入框規範 (Spec Section 9.3)
-   -------------------------------------------------------------------------- */
-.form-control,
-.form-select {
-  background-color: var(--surface-1) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-strong) !important;
-}
-
-.form-control::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 1;
-}
-
-.form-control:focus,
-.form-select:focus {
-  color: var(--text-primary) !important;
-  background-color: var(--surface-1) !important;
-  border-color: var(--focus-ring) !important;
-  box-shadow: 0 0 0 0.25rem rgb(37 99 235 / 0.2) !important;
-}
-
-.form-control:disabled,
-.form-select:disabled {
-  background-color: var(--surface-3) !important;
-  color: var(--text-disabled) !important;
-  cursor: not-allowed;
+.nav-link:hover,
+.nav-link.active {
+    color: var(--text-primary) !important;
 }
 
 /* --------------------------------------------------------------------------
-   9.4 & 9.5 按鈕與互動元件規範 (Spec Section 9.4)
+   Hero Section
    -------------------------------------------------------------------------- */
-.btn-primary {
-  background-color: var(--accent) !important;
-  color: var(--text-on-accent) !important;
-  border: 1px solid transparent !important;
+.hero {
+    padding: 4.5rem 0 3rem;
 }
 
-.btn-primary:hover {
-  background-color: var(--accent-hover) !important;
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+    border-radius: 999px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 700;
+    font-size: 0.875rem;
 }
 
-.btn-primary:active {
-  background-color: var(--accent-active) !important;
+.hero-title {
+    max-width: 14ch;
+    margin: 1.25rem 0;
+    font-size: clamp(2.3rem, 5vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+    color: var(--text-primary);
 }
 
-.btn-outline-primary {
-  color: var(--accent) !important;
-  border-color: var(--accent) !important;
-}
-
-.btn-outline-primary:hover {
-  background-color: var(--accent) !important;
-  color: var(--text-on-accent) !important;
-}
-
-.btn-outline-secondary {
-  color: var(--text-secondary) !important;
-  border-color: var(--border-strong) !important;
-  background-color: var(--surface-2) !important;
-}
-
-.btn-outline-secondary:hover {
-  background-color: var(--surface-3) !important;
-  color: var(--text-primary) !important;
+.hero-copy {
+    max-width: 38rem;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.8;
 }
 
 /* --------------------------------------------------------------------------
-    Bootstrap 類別語意化覆蓋 (防止直接寫死 text-dark / bg-white)
+   Buttons & Badges
    -------------------------------------------------------------------------- */
-.text-dark {
-  color: var(--text-primary) !important;
+.btn-app-primary {
+    color: white !important;
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
 }
 
-.text-muted {
-  color: var(--text-muted) !important;
+.btn-app-primary:hover,
+.btn-app-primary:active {
+    color: white !important;
+    background: var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
 }
 
-.text-secondary {
-  color: var(--text-secondary) !important;
+.btn-app-secondary {
+    color: var(--text-primary) !important;
+    background: var(--surface-2) !important;
+    border-color: var(--border-strong) !important;
 }
 
-.text-primary {
-  color: var(--accent) !important;
-}
-
-.bg-body-tertiary,
-.bg-light {
-  background-color: var(--surface-3) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-subtle) !important;
-}
-
-.table-light {
-  background-color: var(--surface-3) !important;
-  color: var(--text-primary) !important;
-}
-
-.table-hover tbody tr:hover {
-  color: var(--text-primary) !important;
-  background-color: var(--surface-3) !important;
+.btn-app-secondary:hover {
+    color: var(--text-primary) !important;
+    background: var(--surface-3) !important;
+    border-color: var(--border-strong) !important;
 }
 
 /* --------------------------------------------------------------------------
-   10.1 行事曆專用狀態類別 (Spec Section 10.1)
+   Cards & Previews
    -------------------------------------------------------------------------- */
-.bg-available {
-  background-color: var(--success-soft) !important;
-  color: var(--calendar-available-text) !important;
-  border: 1px solid var(--calendar-available-line) !important;
+.app-card {
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.bg-busy {
-  background-color: var(--danger-soft) !important;
-  color: var(--calendar-busy-text) !important;
-  border: 1px solid var(--calendar-busy-line) !important;
+.preview-card {
+    position: relative;
+    overflow: hidden;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-md);
 }
 
-.bg-maybe {
-  background-color: var(--warning-soft) !important;
-  color: var(--calendar-maybe-text) !important;
-  border: 1px solid var(--calendar-maybe-line) !important;
+.preview-card::before {
+    position: absolute;
+    top: -6rem;
+    right: -6rem;
+    width: 14rem;
+    height: 14rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    content: "";
 }
 
-.bg-unset {
-  background-color: var(--surface-3) !important;
-  color: var(--calendar-unset-text) !important;
-  border: 1px solid var(--calendar-unset-line) !important;
+.mini-toolbar,
+.section-heading {
+    position: relative;
+    z-index: 1;
 }
 
-/* 行事曆標頭與卡片 */
+.calendar-preview {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.calendar-day {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: 1rem;
+    background: var(--surface-1);
+}
+
+.calendar-day__header {
+    min-height: 5.75rem;
+    padding: 0.85rem;
+    background: var(--surface-1);
+}
+
+.calendar-day__date {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.calendar-day__meta {
+    margin-top: 0.45rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.calendar-day__fill {
+    display: flex;
+    height: 7rem;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.fill-unset { background: var(--calendar-unset-fill); }
+.fill-busy { background: var(--calendar-busy-fill); }
+.fill-maybe { background: var(--calendar-maybe-fill); }
+.fill-available { background: var(--calendar-available-fill); }
+
+.recommended {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.recommended .calendar-day__date::after {
+    margin-left: 0.4rem;
+    color: var(--accent);
+    content: "★";
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+}
+
+.legend-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+}
+
+.section-block {
+    padding: 2.5rem 0;
+}
+
+.section-title {
+    margin-bottom: 0.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+}
+
+.quick-card {
+    height: 100%;
+    padding: 1.3rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.quick-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong) !important;
+}
+
+.quick-icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.85rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-size: 1.25rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.muted {
+    color: var(--text-muted) !important;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.activity-item:last-child {
+    border-bottom: 0;
+}
+
+.activity-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 3.25rem;
+    height: 3.25rem;
+    border-radius: 0.9rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.status-open {
+    color: var(--warning);
+    background: var(--warning-soft);
+}
+
+.status-confirmed {
+    color: var(--success);
+    background: var(--success-soft);
+}
+
+.theme-menu .dropdown-menu {
+    color: var(--text-primary) !important;
+    background: var(--surface-2) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+.theme-menu .dropdown-item {
+    color: var(--text-primary) !important;
+}
+
+.theme-menu .dropdown-item:hover {
+    background: var(--surface-3) !important;
+}
+
+footer {
+    margin-top: 3rem;
+    padding: 2rem 0;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* --------------------------------------------------------------------------
+   Calendar Grids & Badges (Personal & Team Detail Views)
+   -------------------------------------------------------------------------- */
 .calendar-day-header,
 .team-calendar-day-header {
-  text-align: center;
-  font-weight: 600;
-  padding: 10px;
-  background-color: var(--surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-secondary);
+    text-align: center;
+    font-weight: 600;
+    padding: 10px;
+    background-color: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-secondary);
 }
 
 .calendar-day-card,
 .team-calendar-day-card {
-  background-color: var(--surface-2);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
+    background-color: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
 }
 
-/* 4 色由下而上動態比例填充容器 (Spec Section 10.2) */
-.calendar-fill-container {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  z-index: 0;
-  border-radius: 12px;
-  overflow: hidden;
+.bg-available {
+    background-color: var(--success-soft) !important;
+    color: var(--calendar-available-text) !important;
+    border: 1px solid var(--calendar-available-line) !important;
 }
 
-.fill-segment {
-  width: 100%;
-  transition: height 0.3s ease;
+.bg-busy {
+    background-color: var(--danger-soft) !important;
+    color: var(--calendar-busy-text) !important;
+    border: 1px solid var(--calendar-busy-line) !important;
 }
 
-.fill-available {
-  background-color: var(--calendar-available-fill);
+.bg-maybe {
+    background-color: var(--warning-soft) !important;
+    color: var(--calendar-maybe-text) !important;
+    border: 1px solid var(--calendar-maybe-line) !important;
 }
 
-.fill-maybe {
-  background-color: var(--calendar-maybe-fill);
+.bg-unset {
+    background-color: var(--surface-3) !important;
+    color: var(--calendar-unset-text) !important;
+    border: 1px solid var(--calendar-unset-line) !important;
 }
 
-.fill-busy {
-  background-color: var(--calendar-busy-fill);
+.text-dark {
+    color: var(--text-primary) !important;
 }
 
-.fill-unset {
-  background-color: var(--calendar-unset-fill);
+.text-muted {
+    color: var(--text-muted) !important;
 }
 
-/* 主題切換按鈕動畫 */
-.theme-toggle-btn {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+.text-secondary {
+    color: var(--text-secondary) !important;
 }
 
-.theme-toggle-btn:active {
-  transform: scale(0.92);
+.text-primary {
+    color: var(--accent) !important;
+}
+
+.bg-body-tertiary,
+.bg-light {
+    background-color: var(--surface-3) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.table-light {
+    background-color: var(--surface-3) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--surface-1) !important;
+    border-color: var(--border-strong) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 1;
+}
+
+.form-control:focus,
+.form-select:focus {
+    color: var(--text-primary) !important;
+    background-color: var(--surface-1) !important;
+    border-color: var(--focus-ring) !important;
+    box-shadow: 0 0 0 0.25rem rgb(37 99 235 / 0.2) !important;
+}
+
+@media (max-width: 991.98px) {
+    .hero {
+        padding-top: 3.5rem;
+    }
+
+    .calendar-preview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .calendar-preview {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
 }

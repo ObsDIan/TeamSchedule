@@ -1,33 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TeamSchedule</title>
+
     <script>
-        (function () {
-            const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-bs-theme', saved);
+        (() => {
+            const savedTheme = localStorage.getItem("theme") || "auto";
+            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+            document.documentElement.setAttribute(
+                "data-bs-theme",
+                savedTheme === "auto" ? systemTheme : savedTheme
+            );
         })();
     </script>
-    <script type="importmap"></script>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TeamSchedule.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header class="sticky-top">
-        <nav class="navbar navbar-expand-sm navbar-light glass-navbar mb-4 shadow-sm py-2">
-            <div class="container-fluid px-4">
-                <a class="navbar-brand fw-bold fs-4 text-primary d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
-                    <span>🗓️</span> <span class="bg-gradient text-primary">TeamSchedule</span>
+        <nav class="navbar navbar-expand-lg app-navbar py-2">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-body" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark"><i class="bi bi-calendar2-week"></i></span>
+                    TeamSchedule
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="切換導覽列">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1 ms-3">
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                         <li class="nav-item">
                             <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Home" asp-action="Index">首頁</a>
                         </li>
@@ -40,28 +51,42 @@
                         <li class="nav-item">
                             <a class="nav-link fw-semibold px-3" asp-area="" asp-controller="Team" asp-action="Index">👥 我的團隊</a>
                         </li>
-                    </ul>
-                    <div class="d-flex align-items-center">
-                        <button id="themeToggleBtn" type="button" class="btn btn-outline-secondary btn-sm theme-toggle-btn me-3" onclick="toggleTheme()">
-                            🌙 深色模式
-                        </button>
+
+                        <li class="nav-item dropdown theme-menu ms-lg-2 me-lg-2">
+                            <button class="btn btn-app-secondary btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-circle-half me-1"></i> 顯示模式
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3">
+                                <li><button class="dropdown-item py-2" type="button" onclick="setTheme('light')"><i class="bi bi-sun me-2 text-warning"></i>明亮</button></li>
+                                <li><button class="dropdown-item py-2" type="button" onclick="setTheme('dark')"><i class="bi bi-moon-stars me-2 text-primary"></i>深色</button></li>
+                                <li><button class="dropdown-item py-2" type="button" onclick="setTheme('auto')"><i class="bi bi-laptop me-2 text-secondary"></i>跟隨系統</button></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item ms-lg-1 me-lg-2">
+                            <a class="btn btn-app-primary btn-sm rounded-pill px-3 fw-semibold" asp-controller="Personal" asp-action="Calendar">
+                                進入我的行事曆
+                            </a>
+                        </li>
+
                         <partial name="_LoginPartial" />
-                    </div>
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - TeamSchedule - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <main role="main" class="pb-4">
+        @RenderBody()
+    </main>
+
+    <footer>
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>&copy; 2026 - TeamSchedule</span>
+            <span class="small muted">設定一次，讓所有團隊都知道你哪天有空。</span>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -77,31 +102,17 @@
             return localStorage.getItem(THEME_KEY) || "auto";
         }
 
-        function resolveTheme(theme) {
-            return theme === "auto" ? getSystemTheme() : theme;
-        }
-
         function applyTheme(theme) {
-            const resolved = resolveTheme(theme);
+            const resolved = theme === "auto" ? getSystemTheme() : theme;
             document.documentElement.setAttribute("data-bs-theme", resolved);
-
-            const btn = document.getElementById('themeToggleBtn');
-            if (btn) {
-                if (resolved === 'dark') {
-                    btn.innerHTML = '☀️ 淺色模式';
-                    btn.className = 'btn btn-outline-warning btn-sm theme-toggle-btn me-3';
-                } else {
-                    btn.innerHTML = '🌙 深色模式';
-                    btn.className = 'btn btn-outline-secondary btn-sm theme-toggle-btn me-3';
-                }
-            }
         }
 
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute("data-bs-theme") || "light";
-            const next = current === "dark" ? "light" : "dark";
-            localStorage.setItem(THEME_KEY, next);
-            applyTheme(next);
+        function setTheme(theme) {
+            if (!["light", "dark", "auto"].includes(theme)) {
+                return;
+            }
+            localStorage.setItem(THEME_KEY, theme);
+            applyTheme(theme);
         }
 
         const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -110,11 +121,8 @@
                 applyTheme("auto");
             }
         });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            applyTheme(getSavedTheme());
-        });
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
