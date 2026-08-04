@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TeamSchedule.Data;
 using TeamSchedule.Models;
+using TeamSchedule.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.Password.RequiredLength = 6;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
