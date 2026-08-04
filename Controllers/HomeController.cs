@@ -128,20 +128,20 @@ public class HomeController : Controller
         }
 
         // 若無團隊資料或未登入，提供預設質感範例預覽
-        if (!model.PreviewCandidateDates.Any())
-        {
-            model.FeaturedTeamName = "羽球社";
-            model.FeaturedActivityTitle = "八月聚會";
-            var baseDate = DateTime.Today;
+        //if (!model.PreviewCandidateDates.Any())
+        //{
+        //    model.FeaturedTeamName = "展示資料";
+        //    model.FeaturedActivityTitle = "八月聚會";
+        //    var baseDate = DateTime.Today;
 
-            model.PreviewCandidateDates = new List<HomeCandidatePreviewItem>
-            {
-                new() { Date = baseDate.AddDays(2), AvailableCount = 5, TotalMembersCount = 10, AvailablePercent = 50, BusyPercent = 20, MaybePercent = 10, UnsetPercent = 20, IsRecommended = false },
-                new() { Date = baseDate.AddDays(3), AvailableCount = 8, TotalMembersCount = 10, AvailablePercent = 80, BusyPercent = 10, MaybePercent = 10, UnsetPercent = 0, IsRecommended = true },
-                new() { Date = baseDate.AddDays(9), AvailableCount = 6, TotalMembersCount = 10, AvailablePercent = 60, BusyPercent = 30, MaybePercent = 0, UnsetPercent = 10, IsRecommended = false },
-                new() { Date = baseDate.AddDays(10), AvailableCount = 4, TotalMembersCount = 10, AvailablePercent = 40, BusyPercent = 40, MaybePercent = 10, UnsetPercent = 10, IsRecommended = false }
-            };
-        }
+        //    model.PreviewCandidateDates = new List<HomeCandidatePreviewItem>
+        //    {
+        //        new() { Date = baseDate.AddDays(2), AvailableCount = 5, TotalMembersCount = 10, AvailablePercent = 50, BusyPercent = 20, MaybePercent = 10, UnsetPercent = 20, IsRecommended = false },
+        //        new() { Date = baseDate.AddDays(3), AvailableCount = 8, TotalMembersCount = 10, AvailablePercent = 80, BusyPercent = 10, MaybePercent = 10, UnsetPercent = 0, IsRecommended = true },
+        //        new() { Date = baseDate.AddDays(9), AvailableCount = 6, TotalMembersCount = 10, AvailablePercent = 60, BusyPercent = 30, MaybePercent = 0, UnsetPercent = 10, IsRecommended = false },
+        //        new() { Date = baseDate.AddDays(10), AvailableCount = 4, TotalMembersCount = 10, AvailablePercent = 40, BusyPercent = 40, MaybePercent = 10, UnsetPercent = 10, IsRecommended = false }
+        //    };
+        //}
 
         return View(model);
     }
