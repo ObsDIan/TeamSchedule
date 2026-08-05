@@ -10,6 +10,9 @@
 }
 
 <div class="container py-4">
+    <form id="voteAntiForgeryForm" class="d-none">
+        @Html.AntiForgeryToken()
+    </form>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
@@ -185,23 +188,47 @@
 @section Scripts {
     <script>
         async function voteDate(activityId, candidateDateId, statusVal) {
-            const response = await fetch('/Team/RespondActivity', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    activityId: activityId,
-                    candidateDateId: candidateDateId,
-                    responseStatus: statusVal
-                })
-            });
+            const token = document.querySelector(
+                '#voteAntiForgeryForm input[name="__RequestVerificationToken"]'
+            )?.value;
 
-            const res = await response.json();
-            if (res.success) {
+            if (!token) {
+                alert('無法取得安全驗證資料，請重新整理頁面後再試。');
+                return;
+            }
+
+            try {
+                const response = await fetch('/Team/RespondActivity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        activityId: activityId,
+                        candidateDateId: candidateDateId,
+                        responseStatus: statusVal
+                    })
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                const result = contentType.includes('application/json')
+                    ? await response.json()
+                    : null;
+
+                if (!response.ok || !result?.success) {
+                    alert(
+                        '投票失敗：' +
+                        (result?.message || `伺服器回傳 ${response.status}`)
+                    );
+                    return;
+                }
+
                 window.location.reload();
-            } else {
-                alert('投票失敗：' + (res.message || '請稍後再試'));
+            }
+            catch (error) {
+                console.error('活動投票發生錯誤：', error);
+                alert('投票失敗：目前無法連線到伺服器，請稍後再試。');
             }
         }
     </script>

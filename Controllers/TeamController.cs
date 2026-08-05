@@ -158,13 +158,63 @@ public class TeamController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> RespondActivity([FromBody] RespondActivityRequestModel request)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RespondActivity(
+    [FromBody] RespondActivityRequestModel? request)
     {
         var userId = userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "未登入" });
 
-        await teamService.RespondActivityAsync(userId, request.ActivityId, request.CandidateDateId, request.ResponseStatus);
-        return Json(new { success = true });
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "登入狀態已失效，請重新登入。"
+            });
+        }
+
+        if (request == null ||
+            request.ActivityId <= 0 ||
+            request.CandidateDateId <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "活動投票資料不完整。"
+            });
+        }
+
+        try
+        {
+            await teamService.RespondActivityAsync(
+                userId,
+                request.ActivityId,
+                request.CandidateDateId,
+                request.ResponseStatus);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPost]
