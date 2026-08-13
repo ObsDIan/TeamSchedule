@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -299,5 +300,63 @@ public class TeamController(
         {
             return NotFound();
         }
+    }
+
+    public async Task<IActionResult> ExportIcs(long activityId)
+    {
+        var userId = userManager.GetUserId(User);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        try
+        {
+            var activity = await teamService.GetActivityForExportAsync(activityId, userId);
+            var teamName = activity.Team?.TeamName ?? "";
+
+            var builder = new StringBuilder();
+            builder.AppendLine("BEGIN:VCALENDAR");
+            builder.AppendLine("VERSION:2.0");
+            builder.AppendLine("PRODID:-//TeamSchedule//TeamSchedule//ZH-TW");
+            builder.AppendLine("CALSCALE:GREGORIAN");
+            builder.AppendLine("METHOD:PUBLISH");
+            builder.AppendLine("BEGIN:VEVENT");
+            builder.AppendLine($"UID:{activity.ActivityId}@teamschedule.local");
+            builder.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
+            builder.AppendLine($"DTSTART;VALUE=DATE:{activity.FinalDate!.Value:yyyyMMdd}");
+            builder.AppendLine($"SUMMARY:{EscapeIcsText(activity.Title)}");
+            var description = string.IsNullOrWhiteSpace(activity.Description)
+                ? $"團隊：{teamName}"
+                : $"{activity.Description}\n團隊：{teamName}";
+            builder.AppendLine($"DESCRIPTION:{EscapeIcsText(description)}");
+            builder.AppendLine("END:VEVENT");
+            builder.AppendLine("END:VCALENDAR");
+
+            var fileName = $"{SanitizeFileName(activity.Title)}.ics";
+            return File(Encoding.UTF8.GetBytes(builder.ToString()), "text/calendar", fileName);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
+
+    private static string EscapeIcsText(string text)
+    {
+        return text
+            .Replace("\\", "\\\\")
+            .Replace(";", "\\;")
+            .Replace(",", "\\,")
+            .Replace("\r\n", "\\n")
+            .Replace("\n", "\\n");
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var cleaned = new string(name.Select(c => invalidChars.Contains(c) ? '_' : c).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "活動" : cleaned;
     }
 }
