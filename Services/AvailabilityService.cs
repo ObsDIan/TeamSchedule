@@ -13,7 +13,6 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
         // Rule 1: Confirmed activity
         var hasConfirmedActivity = await context.ActivityParticipants
-            .Include(p => p.Activity)
             .AnyAsync(p => p.UserId == userId &&
                            p.ParticipationStatus == ParticipationStatus.Joined &&
                            p.Activity != null &&
@@ -47,6 +46,13 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
         // Rule 4: Unset (null)
         return null;
+    }
+
+    public async Task<Dictionary<int, AvailabilityStatus>> GetWeeklyAvailabilityAsync(string userId)
+    {
+        return await context.UserWeeklyAvailabilities
+            .Where(w => w.UserId == userId)
+            .ToDictionaryAsync(w => w.DayOfWeek, w => w.AvailabilityStatus);
     }
 
     public async Task<CalendarMonthViewModel> GetPersonalCalendarMonthAsync(string userId, int year, int month)

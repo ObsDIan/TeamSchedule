@@ -33,29 +33,19 @@ public class PersonalController(
 
         var model = new WeeklySetupViewModel();
 
-        // Load existing weekly settings or default (Mon-Fri: Busy, Sat-Sun: Available)
+        // Load saved weekly settings directly from DB
+        var savedSettings = await availabilityService.GetWeeklyAvailabilityAsync(userId);
+
+        // Default rule for unset days: Mon-Fri Busy, Sat-Sun Available
         for (int day = 0; day <= 6; day++)
         {
-            var status = await availabilityService.GetFinalStatusAsync(userId, DateTime.Today.AddDays(day - (int)DateTime.Today.DayOfWeek));
-            // Default rule if not set
-            if (day == 0 || day == 6)
+            if (savedSettings.TryGetValue(day, out var savedStatus))
             {
-                model.DaySettings[day] = AvailabilityStatus.Available;
+                model.DaySettings[day] = savedStatus;
             }
             else
             {
-                model.DaySettings[day] = AvailabilityStatus.Busy;
-            }
-        }
-
-        // Fetch actual saved values from DB
-        var savedMonth = await availabilityService.GetPersonalCalendarMonthAsync(userId, DateTime.Today.Year, DateTime.Today.Month);
-        foreach (var dayModel in savedMonth.Days)
-        {
-            int dayOfWeek = (int)dayModel.Date.DayOfWeek;
-            if (dayModel.Status.HasValue && !dayModel.IsConfirmedActivityBusy)
-            {
-                model.DaySettings[dayOfWeek] = dayModel.Status.Value;
+                model.DaySettings[day] = day == 0 || day == 6 ? AvailabilityStatus.Available : AvailabilityStatus.Busy;
             }
         }
 
@@ -76,6 +66,7 @@ public class PersonalController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetOverride([FromBody] SetDateOverrideRequestModel request)
     {
         var userId = userManager.GetUserId(User);
