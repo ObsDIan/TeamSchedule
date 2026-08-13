@@ -8,6 +8,7 @@ public interface ITeamService
     Task<long> CreateTeamAsync(string userId, string teamName, string? description);
     Task<bool> JoinTeamByInviteCodeAsync(string userId, string inviteCode);
     Task<TeamListViewModel> GetUserTeamsAsync(string userId);
+    Task<string> GetTeamNameForMemberAsync(long teamId, string userId);
     Task<TeamDetailViewModel> GetTeamDetailAsync(long teamId, string userId, int? year, int? month);
     Task<long> CreateActivityAsync(string userId, long teamId, string title, string? description, List<DateTime> candidateDates);
     Task<ActivityDetailViewModel> GetActivityDetailAsync(long activityId, string userId);
