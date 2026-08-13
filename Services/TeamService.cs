@@ -7,7 +7,8 @@ namespace TeamSchedule.Services;
 
 public class TeamService(
     ApplicationDbContext context,
-    IAvailabilityService availabilityService) : ITeamService
+    IAvailabilityService availabilityService,
+    INotificationService notificationService) : ITeamService
 {
     public async Task<long> CreateTeamAsync(string userId, string teamName, string? description)
     {
@@ -384,6 +385,9 @@ public class TeamService(
         }
 
         await context.SaveChangesAsync();
+
+        var recipients = await GetTeamMembersForNotificationAsync(activity.TeamId);
+        await notificationService.SendActivityConfirmedAsync(activity, recipients);
     }
 
     public async Task CancelActivityAsync(string userId, long activityId)
@@ -398,6 +402,36 @@ public class TeamService(
 
         activity.Status = ActivityStatus.Cancelled;
         await context.SaveChangesAsync();
+
+        var recipients = await GetTeamMembersForNotificationAsync(activity.TeamId);
+        await notificationService.SendActivityCancelledAsync(activity, recipients);
+    }
+
+    public async Task<TeamActivity> GetActivityForExportAsync(long activityId, string userId)
+    {
+        var activity = await context.TeamActivities
+            .Include(a => a.Team)
+            .ThenInclude(t => t!.Members)
+            .FirstOrDefaultAsync(a => a.ActivityId == activityId)
+            ?? throw new InvalidOperationException("找不到該活動。");
+
+        var isMember = activity.Team?.Members.Any(m => m.UserId == userId) ?? false;
+        if (!isMember) throw new UnauthorizedAccessException("您不是該團隊成員。");
+
+        if (activity.Status != ActivityStatus.Confirmed || !activity.FinalDate.HasValue)
+        {
+            throw new InvalidOperationException("此活動尚未定案，無法匯出行事曆。");
+        }
+
+        return activity;
+    }
+
+    private async Task<IReadOnlyList<ApplicationUser>> GetTeamMembersForNotificationAsync(long teamId)
+    {
+        return await context.TeamMembers
+            .Where(m => m.TeamId == teamId)
+            .Select(m => m.User!)
+            .ToListAsync();
     }
 
     private async Task<string> GenerateUniqueInviteCodeAsync()
