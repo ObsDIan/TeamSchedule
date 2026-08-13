@@ -54,7 +54,7 @@
 </style>
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">📅 我的個人狀態月曆</h2>
             <p class="text-muted mb-0">管理您的個人可用日期，團隊將依此自動計算空檔。</p>
@@ -83,18 +83,19 @@
         <span class="ms-auto text-muted small">* 點擊任意日期即可修改或新增個人特殊備註。</span>
     </div>
 
-    <!-- 七欄網格 -->
-    <div class="calendar-grid mb-2">
-        <div class="calendar-day-header text-danger">週日</div>
-        <div class="calendar-day-header">週一</div>
-        <div class="calendar-day-header">週二</div>
-        <div class="calendar-day-header">週三</div>
-        <div class="calendar-day-header">週四</div>
-        <div class="calendar-day-header">週五</div>
-        <div class="calendar-day-header text-primary">週六</div>
-    </div>
+    <!-- 七欄網格 (手機橫向捲動) -->
+    <div class="calendar-scroll">
+        <div class="calendar-grid mb-2">
+            <div class="calendar-day-header text-danger">週日</div>
+            <div class="calendar-day-header">週一</div>
+            <div class="calendar-day-header">週二</div>
+            <div class="calendar-day-header">週三</div>
+            <div class="calendar-day-header">週四</div>
+            <div class="calendar-day-header">週五</div>
+            <div class="calendar-day-header text-primary">週六</div>
+        </div>
 
-    <div class="calendar-grid">
+        <div class="calendar-grid">
         @foreach (var day in Model.Days)
         {
             var isOther = !day.IsCurrentMonth ? "other-month" : "";
@@ -148,6 +149,7 @@
                 </div>
             </div>
         }
+    </div>
     </div>
 </div>
 

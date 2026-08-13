@@ -348,6 +348,16 @@ a:hover {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+.calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.calendar-scroll .calendar-grid,
+.calendar-scroll .team-calendar-grid {
+    min-width: 560px;
+}
+
 .recommended .calendar-day__date::after {
     margin-left: 0.4rem;
     color: var(--accent);
