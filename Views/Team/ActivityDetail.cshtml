@@ -13,9 +13,9 @@
     <form id="voteAntiForgeryForm" class="d-none">
         @Html.AntiForgeryToken()
     </form>
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                 <h2 class="fw-bold text-dark mb-0">📌 @Model.Title</h2>
                 @if (Model.Status == ActivityStatus.Open)
                 {
@@ -64,7 +64,7 @@
                         <h4 class="fw-bold mb-1">🎉 已確定活動日期</h4>
                         <p class="text-muted small mb-0">活動已定案，其他未選定的候選日期已自動隱藏，無法再變更或投票。</p>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
                         <span class="badge bg-success fs-6 rounded-pill">定案日期：@Model.FinalDate?.ToString("yyyy-MM-dd (ddd)")</span>
                         <a asp-action="ExportIcs" asp-route-activityId="@Model.ActivityId" class="btn btn-outline-primary rounded-pill px-3" title="下載 ICS 行事曆檔案">
                             <i class="bi bi-calendar-plus"></i> 匯出 ICS 行事曆
@@ -85,7 +85,7 @@
                     <div class="col-md-6 col-lg-4">
                         <div class="card border-1 @(isConfirmedDate ? "border-success bg-success-subtle" : "border-light-subtle") shadow-sm rounded-3 p-3 h-100 d-flex flex-column justify-content-between">
                             <div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                                     <h5 class="fw-bold mb-0 text-primary">📅 @cand.CandidateDate.ToString("yyyy-MM-dd (ddd)")</h5>
                                     <div class="d-flex gap-1 align-items-center">
                                         @if (!string.IsNullOrEmpty(cand.TimeRangeText))
@@ -99,7 +99,7 @@
                                     </div>
                                 </div>
 
-                                <div class="d-flex gap-2 my-2 small">
+                                <div class="d-flex flex-wrap gap-2 my-2 small">
                                     <span class="badge bg-success">🟢 參加：@cand.JoinCount 人</span>
                                     <span class="badge bg-warning text-dark">🟡 不確定：@cand.MaybeCount 人</span>
                                     <span class="badge bg-danger">🔴 不參加：@cand.DeclineCount 人</span>

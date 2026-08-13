@@ -4,7 +4,7 @@
 }
 
 <div class="container py-4" style="max-width: 650px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">➕ 建立團隊活動排程</h2>
             <p class="text-muted mb-0">團隊：<strong>@Model.TeamName</strong></p>
@@ -33,12 +33,20 @@
 
                 <div class="mb-4">
                     <label asp-for="CandidateDatesInput" class="form-label fw-bold">候選日期 (請選擇或輸入多個日期)：</label>
-                    <div class="input-group mb-2">
-                        <input type="date" id="datePicker" class="form-control rounded-start-3" />
-                        <input type="time" id="startTimePicker" class="form-control" title="開始時間（可不填）" />
-                        <span class="input-group-text">~</span>
-                        <input type="time" id="endTimePicker" class="form-control" title="結束時間（可不填）" />
-                        <button type="button" class="btn btn-outline-primary rounded-end-3 px-4" onclick="addSelectedDate()">加入日期</button>
+                    <div class="row g-2 mb-2">
+                        <div class="col-12 col-sm-4">
+                            <input type="date" id="datePicker" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-5 col-sm-3">
+                            <input type="time" id="startTimePicker" class="form-control rounded-3" title="開始時間（可不填）" />
+                        </div>
+                        <div class="col-2 col-sm-1 d-flex align-items-center justify-content-center text-muted">~</div>
+                        <div class="col-5 col-sm-3">
+                            <input type="time" id="endTimePicker" class="form-control rounded-3" title="結束時間（可不填）" />
+                        </div>
+                        <div class="col-12 col-sm-1 d-grid">
+                            <button type="button" class="btn btn-outline-primary rounded-3 px-0" onclick="addSelectedDate()">加入</button>
+                        </div>
                     </div>
 
                     <textarea asp-for="CandidateDatesInput" id="candidateDatesText" class="form-control rounded-3 font-monospace" rows="4" placeholder="例：2026-08-15, 2026-08-22 14:00~17:00 (多個請用逗號隔開)"></textarea>

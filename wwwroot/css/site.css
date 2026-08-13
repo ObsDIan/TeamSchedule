@@ -353,9 +353,12 @@ a:hover {
     -webkit-overflow-scrolling: touch;
 }
 
-.calendar-scroll .calendar-grid,
-.calendar-scroll .team-calendar-grid {
+.calendar-scroll .calendar-grid {
     min-width: 560px;
+}
+
+.calendar-scroll .team-calendar-grid {
+    min-width: 700px;
 }
 
 .recommended .calendar-day__date::after {
