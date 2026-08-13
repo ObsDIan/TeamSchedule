@@ -8,6 +8,8 @@ public class TeamActivity
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateTime? FinalDate { get; set; }
+    public TimeSpan? FinalStartTime { get; set; }
+    public TimeSpan? FinalEndTime { get; set; }
     public ActivityStatus Status { get; set; } = ActivityStatus.Open;
     public string CreatedBy { get; set; } = string.Empty;
     public ApplicationUser? Creator { get; set; }

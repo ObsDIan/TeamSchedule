@@ -23,7 +23,7 @@
                 }
                 else if (Model.Status == ActivityStatus.Confirmed)
                 {
-                    <span class="badge bg-success fs-6 rounded-pill">已定案：@Model.FinalDate?.ToString("yyyy-MM-dd (ddd)")</span>
+                    <span class="badge bg-success fs-6 rounded-pill">已定案：@Model.FinalDate?.ToString("yyyy-MM-dd (ddd)")@(string.IsNullOrEmpty(Model.FinalTimeRangeText) ? "" : " " + Model.FinalTimeRangeText)</span>
                 }
                 else if (Model.Status == ActivityStatus.Cancelled)
                 {
@@ -87,10 +87,16 @@
                             <div>
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h5 class="fw-bold mb-0 text-primary">📅 @cand.CandidateDate.ToString("yyyy-MM-dd (ddd)")</h5>
-                                    @if (isConfirmedDate)
-                                    {
-                                        <span class="badge bg-success rounded-pill">最終定案日期</span>
-                                    }
+                                    <div class="d-flex gap-1 align-items-center">
+                                        @if (!string.IsNullOrEmpty(cand.TimeRangeText))
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary rounded-pill">🕐 @cand.TimeRangeText</span>
+                                        }
+                                        @if (isConfirmedDate)
+                                        {
+                                            <span class="badge bg-success rounded-pill">最終定案日期</span>
+                                        }
+                                    </div>
                                 </div>
 
                                 <div class="d-flex gap-2 my-2 small">
@@ -119,7 +125,7 @@
                                     @if (Model.IsOwner)
                                     {
                                         <div class="mt-3">
-                                            <form asp-action="ConfirmActivity" method="post" onsubmit="return confirm('確定要選定 @cand.CandidateDate.ToString("yyyy-MM-dd") 為最終活動日期嗎？選後將自動回寫參加成員的個人狀態為忙碌。');">
+                                            <form asp-action="ConfirmActivity" method="post" onsubmit="return confirm('確定要選定 @cand.CandidateDate.ToString("yyyy-MM-dd")@(string.IsNullOrEmpty(cand.TimeRangeText) ? "" : " " + cand.TimeRangeText) 為最終活動日期嗎？選後將自動回寫參加成員的個人狀態為忙碌。');">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="activityId" value="@Model.ActivityId" />
                                                 <input type="hidden" name="candidateDateId" value="@cand.CandidateDateId" />
@@ -150,6 +156,10 @@
                             {
                                 <th class="text-center">
                                     @cand.CandidateDate.ToString("MM/dd (ddd)")
+                                    @if (!string.IsNullOrEmpty(cand.TimeRangeText))
+                                    {
+                                        <div class="small text-secondary fw-normal">🕐 @cand.TimeRangeText</div>
+                                    }
                                     @if (Model.Status == ActivityStatus.Confirmed)
                                     {
                                         <span class="badge bg-success ms-1">已確認定案</span>

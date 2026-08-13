@@ -127,23 +127,39 @@ public class TeamController(
 
         if (!ModelState.IsValid) return View(model);
 
-        var dates = new List<DateTime>();
+        var candidates = new List<ActivityCandidateDateInput>();
         var parts = model.CandidateDatesInput.Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var p in parts)
         {
-            if (DateTime.TryParse(p.Trim(), out var parsedDate))
+            var candidate = ParseCandidateInput(p.Trim());
+            if (candidate == null)
             {
-                dates.Add(parsedDate);
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析「" + p.Trim() + "」，請使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm~HH:mm 格式。");
+                return View(model);
             }
+
+            if (candidate.EndTime.HasValue && !candidate.StartTime.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "「" + p.Trim() + "」的結束時間需搭配開始時間。");
+                return View(model);
+            }
+
+            if (candidate.StartTime.HasValue && candidate.EndTime.HasValue && candidate.EndTime <= candidate.StartTime)
+            {
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "「" + p.Trim() + "」的結束時間必須晚於開始時間。");
+                return View(model);
+            }
+
+            candidates.Add(candidate);
         }
 
-        if (dates.Count == 0)
+        if (candidates.Count == 0)
         {
-            ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析日期格式，請使用 YYYY-MM-DD 格式。");
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析日期格式，請使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm~HH:mm 格式。");
             return View(model);
         }
 
-        var distinctDates = dates.Select(d => d.Date).Distinct().ToList();
+        var distinctDates = candidates.Select(c => c.Date).Distinct().ToList();
         if (distinctDates.Count > 30)
         {
             ModelState.AddModelError(nameof(model.CandidateDatesInput), "候選日期最多 30 個，請精簡選擇。");
@@ -158,7 +174,7 @@ public class TeamController(
 
         try
         {
-            var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, dates);
+            var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, candidates);
             TempData["SuccessMessage"] = "已成功建立團隊活動！";
 
             return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
@@ -172,6 +188,35 @@ public class TeamController(
             ModelState.AddModelError(nameof(model.CandidateDatesInput), ex.Message);
             return View(model);
         }
+    }
+
+    private static ActivityCandidateDateInput? ParseCandidateInput(string input)
+    {
+        var segments = input.Split(new[] { '~', '～' }, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 1)
+        {
+            if (!DateTime.TryParse(segments[0].Trim(), out var date)) return null;
+            return new ActivityCandidateDateInput
+            {
+                Date = date.Date,
+                StartTime = date.TimeOfDay == TimeSpan.Zero ? null : date.TimeOfDay,
+                EndTime = null
+            };
+        }
+
+        if (segments.Length == 2)
+        {
+            if (!DateTime.TryParse(segments[0].Trim(), out var date)) return null;
+            if (!TimeSpan.TryParse(segments[1].Trim(), out var endTime)) return null;
+            return new ActivityCandidateDateInput
+            {
+                Date = date.Date,
+                StartTime = date.TimeOfDay == TimeSpan.Zero ? null : date.TimeOfDay,
+                EndTime = endTime
+            };
+        }
+
+        return null;
     }
 
     public async Task<IActionResult> ActivityDetail(long id)

@@ -163,6 +163,8 @@ public class TeamService(
                 Description = act.Description,
                 Status = act.Status,
                 FinalDate = act.FinalDate,
+                FinalStartTime = act.FinalStartTime,
+                FinalEndTime = act.FinalEndTime,
                 CandidateDatesCount = act.CandidateDates.Count,
                 CreatedAt = act.CreatedAt
             };
@@ -180,24 +182,41 @@ public class TeamService(
         return model;
     }
 
-    public async Task<long> CreateActivityAsync(string userId, long teamId, string title, string? description, List<DateTime> candidateDates)
+    public async Task<long> CreateActivityAsync(string userId, long teamId, string title, string? description, List<ActivityCandidateDateInput> candidateDates)
     {
         var isMember = await context.TeamMembers
             .AnyAsync(m => m.TeamId == teamId && m.UserId == userId);
         if (!isMember) throw new UnauthorizedAccessException("權限不足");
 
-        var distinctDates = candidateDates.Select(d => d.Date).Distinct().OrderBy(d => d).ToList();
+        foreach (var c in candidateDates)
+        {
+            if (c.EndTime.HasValue && !c.StartTime.HasValue)
+            {
+                throw new InvalidOperationException("結束時間需搭配開始時間。");
+            }
+            if (c.StartTime.HasValue && c.EndTime.HasValue && c.EndTime <= c.StartTime)
+            {
+                throw new InvalidOperationException("結束時間必須晚於開始時間。");
+            }
+        }
+
+        var distinctDates = candidateDates
+            .Select(c => c with { Date = c.Date.Date })
+            .Distinct()
+            .OrderBy(d => d.Date)
+            .ToList();
+
         if (distinctDates.Count == 0)
         {
             throw new InvalidOperationException("請至少提供一個候選日期。");
         }
 
-        if (distinctDates.Count > 30)
+        if (distinctDates.Select(d => d.Date).Distinct().Count() > 30)
         {
             throw new InvalidOperationException("候選日期最多 30 個，請精簡選擇。");
         }
 
-        if (distinctDates.Any(d => d < DateTime.Today))
+        if (distinctDates.Any(d => d.Date < DateTime.Today))
         {
             throw new InvalidOperationException("候選日期不能是過去的日期，請重新選擇。");
         }
@@ -220,7 +239,9 @@ public class TeamService(
             context.ActivityCandidateDates.Add(new ActivityCandidateDate
             {
                 ActivityId = activity.ActivityId,
-                CandidateDate = d
+                CandidateDate = d.Date,
+                StartTime = d.StartTime,
+                EndTime = d.EndTime
             });
         }
 
@@ -253,6 +274,8 @@ public class TeamService(
             Description = activity.Description,
             Status = activity.Status,
             FinalDate = activity.FinalDate,
+            FinalStartTime = activity.FinalStartTime,
+            FinalEndTime = activity.FinalEndTime,
             IsOwner = isOwner
         };
 
@@ -264,6 +287,8 @@ public class TeamService(
             {
                 CandidateDateId = cand.CandidateDateId,
                 CandidateDate = cand.CandidateDate,
+                StartTime = cand.StartTime,
+                EndTime = cand.EndTime,
                 JoinCount = cand.Responses.Count(r => r.ResponseStatus == ActivityResponseStatus.Join),
                 DeclineCount = cand.Responses.Count(r => r.ResponseStatus == ActivityResponseStatus.Decline),
                 MaybeCount = cand.Responses.Count(r => r.ResponseStatus == ActivityResponseStatus.Maybe),
@@ -388,6 +413,8 @@ public class TeamService(
             ?? throw new InvalidOperationException("無效的候選日期。");
 
         activity.FinalDate = candidate.CandidateDate;
+        activity.FinalStartTime = candidate.StartTime;
+        activity.FinalEndTime = candidate.EndTime;
         activity.Status = ActivityStatus.Confirmed;
         activity.ConfirmedAt = DateTime.UtcNow;
 

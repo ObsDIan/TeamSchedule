@@ -49,6 +49,7 @@ public class TeamCalendarDayViewModel
     public bool IsConfirmedDate { get; set; }
     public long? ActivityId { get; set; }
     public string? ActivityTitle { get; set; }
+    public string ActivityTimeText { get; set; } = string.Empty;
 
     public double AvailablePercent => CalculatePercent(AvailableCount);
     public double BusyPercent => CalculatePercent(BusyCount);

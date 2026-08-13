@@ -277,7 +277,10 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
                 IsConfirmedDate = confirmedAct != null,
                 IsCandidateDate = confirmedAct == null && dayCandidate != null,
                 ActivityId = confirmedAct?.ActivityId ?? dayCandidate?.ActivityId,
-                ActivityTitle = confirmedAct?.Title ?? dayCandidate?.Activity?.Title
+                ActivityTitle = confirmedAct?.Title ?? dayCandidate?.Activity?.Title,
+                ActivityTimeText = confirmedAct != null
+                    ? ScheduleTimeFormatter.Format(confirmedAct.FinalStartTime, confirmedAct.FinalEndTime)
+                    : ScheduleTimeFormatter.Format(dayCandidate?.StartTime, dayCandidate?.EndTime)
             };
 
             model.Days.Add(dayModel);
