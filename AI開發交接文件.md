@@ -1,7 +1,7 @@
 # 團隊共同時間協調網站 TeamSchedule｜AI 開發與交接文件
 
-> **文件狀態**：✅ 第一至第四階段完全開發完成，通過 0 警告 0 錯誤建置驗證。  
-> **最後更新時間**：2026-08-04  
+> **文件狀態**：✅ 第一至第七階段完全開發完成，通過 0 警告 0 錯誤建置驗證。  
+> **最後更新時間**：2026-08-13  
 > **技術棧**：ASP.NET Core 10.0 MVC + EF Core + SQL Server (LocalDB / Production) + Identity + Bootstrap 5.3 + Vanilla CSS (3-Tiered Semantic Tokens)
 
 ---
@@ -43,7 +43,8 @@ TeamSchedule/
 ├── Models/                                     # EF Core Entity Models
 ├── Services/
 │   ├── IAvailabilityService.cs / AvailabilityService.cs # 時間狀態判定與 4 色比例累積計算
-│   └── ITeamService.cs / TeamService.cs                 # 團隊、邀請碼與活動投票運算
+│   ├── ITeamService.cs / TeamService.cs                 # 團隊、邀請碼與活動投票運算
+│   └── INotificationService.cs / NotificationService.cs # Email (SMTP) 與 LINE Notify 通知（活動定案/取消）
 ├── ViewModels/                                 # 強型別 ViewModels (Calendar, Team, Home)
 ├── Views/
 │   ├── Home/Index.cshtml                       # 首頁 Hero、Preview Card 與活動態勢
@@ -71,8 +72,8 @@ TeamSchedule/
 * **UserDateOverride**: 記錄特殊日期覆蓋 (唯一索引：`UserId + TargetDate`)。
 * **Team**: 團隊主檔 (唯一索引：`InviteCode` 6 位大寫英數)。
 * **TeamMember**: 團隊成員關係檔 (唯一索引：`TeamId + UserId`)。
-* **TeamActivity**: 團隊活動 (狀態：`Open`, `Confirmed`, `Cancelled`)。
-* **ActivityCandidateDate**: 活動候選日期 (唯一索引：`ActivityId + CandidateDate`)。
+* **TeamActivity**: 團隊活動 (狀態：`Open`, `Confirmed`, `Cancelled`；定案後可帶 `FinalStartTime`/`FinalEndTime` 起訖時間)。
+* **ActivityCandidateDate**: 活動候選日期 (唯一索引：`ActivityId + CandidateDate + StartTime + EndTime`，時間欄位可空，整天候選不納入索引)。
 * **ActivityResponse**: 成員對候選日期的投票 (唯一索引：`ActivityId + CandidateDateId + UserId`)。
 * **ActivityParticipant**: 活動定案後的實際參加者 (唯一索引：`ActivityId + UserId`)。
 
@@ -119,6 +120,28 @@ TeamSchedule/
 
 ---
 
+## 5.x 階段五至七新增功能
+
+1. **階段五：活動定案/取消 Email 與 LINE 通知 (`NotificationService`)**
+   - 活動定案 (`ConfirmActivity`) 或取消 (`CancelActivity`) 成功後，自動以 Email（SMTP）與 LINE Notify 通知團隊全體成員。
+   - 設定由 `Smtp:*`、`LineNotify:Token`、`SiteUrl` 組態控制；未設定時僅記 log 警告，不影響主要流程。
+2. **階段六：ICS / iCal 行事曆匯出**
+   - 活動詳細頁於定案後提供「匯出 ICS 行事曆」按鈕，產生 RFC 5545 VEVENT（`DTSTART;VALUE=DATE`）供 iPhone 行事曆 / Google Calendar 匯入。
+   - 端點：`TeamController.ExportIcs(activityId)`，僅限團隊成員、僅限已定案活動。
+3. **階段七：小時/分鐘細粒度排程（起訖時間）**
+   - 候選日期與定案活動可帶可選起訖時間（`StartTime`/`EndTime`，`TimeSpan?`）；留白視為整天，向後相容舊資料。
+   - 建立活動輸入格式：`YYYY-MM-DD`（整天）或 `YYYY-MM-DD HH:mm~HH:mm`（起訖）；「結束需晚於開始」「結束需搭配開始」雙層驗證（前端 JS + Service）。
+   - 唯一索引放寬為 `ActivityId + CandidateDate + StartTime + EndTime`（時間為 null 的整天候選不納入索引），同日期多時段可並存。
+   - 月曆與活動詳細頁均顯示時間（如 `14:00~17:00`），定案時自動複製時間至活動。
+4. **程式碼全面檢視修正**（2026-08-13）
+   - 每週預設載入改直接查詢資料表（修正單日覆蓋誤植為每週預設的邏輯錯誤）。
+   - `SetOverride` 與 AJAX 端點補上防偽驗證；修復 Calendar 備註 XSS 注入風險。
+   - 候選日期驗證：拒絕過去日期、上限 30 個、至少 1 個（Controller + Service 雙層）。
+   - 定案/取消/建立活動未授權時回傳 `Forbid()` 而非 500；已取消活動禁止重新定案。
+   - 補齊 `site.css` 遺漏的 4 色填充條樣式（團隊月曆視覺填充原本未顯示）。
+
+---
+
 ## 6. 安全性與環境設定
 
 * **資料庫連線與 User Secrets**：
@@ -128,19 +151,28 @@ TeamSchedule/
   ```
 * **自動 Migration 機制**：
   `Program.cs` 包含自動 `dbContext.Database.Migrate()` 邏輯，應用程式啟動時會自動建立並升級 SQL Server 資料庫。
+* **SMTP / LINE Notify 通知設定（User Secrets，未設定僅記 log 不影響功能）**：
+  ```bash
+  dotnet user-secrets set "Smtp:Host" "smtp.gmail.com"
+  dotnet user-secrets set "Smtp:Port" "587"
+  dotnet user-secrets set "Smtp:UserName" "your-account@example.com"
+  dotnet user-secrets set "Smtp:Password" "APP_PASSWORD"
+  dotnet user-secrets set "Smtp:From" "your-account@example.com"
+  dotnet user-secrets set "Smtp:EnableSsl" "true"
+  dotnet user-secrets set "LineNotify:Token" "你的LINE_NOTIFY_TOKEN"
+  dotnet user-secrets set "SiteUrl" "https://你的正式網址"
+  ```
+* **防偽驗證與權限**：所有會變更資料的端點均有 `[ValidateAntiForgeryToken]`（含 AJAX 端點，前端 fetch 需帶 token），團隊/活動操作於 Service 層驗證成員資格與 Owner 權限，未授權回傳 `Forbid()` 而非 500。
 
 ---
 
-## 7. AI 接手的後續建議 (Roadmap for Next AI Agent)
+## 7. 後續擴充建議 (Roadmap for Next AI Agent)
 
 若後續有額外擴充需求，建議發展順序如下：
 
-1. **Phase 5：簡訊/Email/LINE 通知整合**
-   * 當活動定案 (`ConfirmActivity`) 時，使用 Background Worker 發送 LINE Notify 或 Email 通知團隊成員。
-2. **Phase 6：ICS / iCal 日期匯出**
-   * 提供 `.ics` 檔下載，讓使用者能一鍵將已確認的團隊活動匯入 iPhone 行事曆或 Google Calendar。
-3. **Phase 7：小時與分鐘細粒度排程**
-   * 在目前「日期」層級的基礎上，擴充單日內的時間區段選項（如：14:00~17:00）。
+1. **活動提醒排程**：利用 Background Worker（如 Quartz.NET / HostedService）在定案活動的前一天自動發送提醒通知。
+2. **國定假日自動載入**：串接國定假日 API 自動標示假期，減少使用者手動設定。
+3. **重複性活動**：支援每週/每月重複的活動建立。
 
 ---
 
