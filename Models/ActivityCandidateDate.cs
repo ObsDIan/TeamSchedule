@@ -6,6 +6,8 @@ public class ActivityCandidateDate
     public long ActivityId { get; set; }
     public TeamActivity? Activity { get; set; }
     public DateTime CandidateDate { get; set; }
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
 
     public ICollection<ActivityResponse> Responses { get; set; } = new List<ActivityResponse>();
 }

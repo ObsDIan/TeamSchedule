@@ -3,6 +3,24 @@ using TeamSchedule.Models;
 
 namespace TeamSchedule.ViewModels;
 
+public static class ScheduleTimeFormatter
+{
+    public static string Format(TimeSpan? start, TimeSpan? end)
+    {
+        if (!start.HasValue) return string.Empty;
+        return end.HasValue
+            ? $"{start.Value.ToString(@"hh\:mm")}~{end.Value.ToString(@"hh\:mm")}"
+            : start.Value.ToString(@"hh\:mm");
+    }
+}
+
+public record ActivityCandidateDateInput
+{
+    public DateTime Date { get; init; }
+    public TimeSpan? StartTime { get; init; }
+    public TimeSpan? EndTime { get; init; }
+}
+
 public class TeamListViewModel
 {
     public List<TeamItemViewModel> MyTeams { get; set; } = new();
@@ -81,6 +99,9 @@ public class ActivitySummaryViewModel
     public string? Description { get; set; }
     public ActivityStatus Status { get; set; }
     public DateTime? FinalDate { get; set; }
+    public TimeSpan? FinalStartTime { get; set; }
+    public TimeSpan? FinalEndTime { get; set; }
+    public string FinalTimeRangeText => ScheduleTimeFormatter.Format(FinalStartTime, FinalEndTime);
     public int CandidateDatesCount { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -94,6 +115,9 @@ public class ActivityDetailViewModel
     public string? Description { get; set; }
     public ActivityStatus Status { get; set; }
     public DateTime? FinalDate { get; set; }
+    public TimeSpan? FinalStartTime { get; set; }
+    public TimeSpan? FinalEndTime { get; set; }
+    public string FinalTimeRangeText => ScheduleTimeFormatter.Format(FinalStartTime, FinalEndTime);
     public bool IsOwner { get; set; }
     public List<CandidateDateItemViewModel> CandidateDates { get; set; } = new();
     public List<ActivityMemberResponseViewModel> MemberResponses { get; set; } = new();
@@ -103,6 +127,9 @@ public class CandidateDateItemViewModel
 {
     public long CandidateDateId { get; set; }
     public DateTime CandidateDate { get; set; }
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
+    public string TimeRangeText => ScheduleTimeFormatter.Format(StartTime, EndTime);
     public int JoinCount { get; set; }
     public int DeclineCount { get; set; }
     public int MaybeCount { get; set; }

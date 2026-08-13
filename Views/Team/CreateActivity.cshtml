@@ -35,16 +35,19 @@
                     <label asp-for="CandidateDatesInput" class="form-label fw-bold">候選日期 (請選擇或輸入多個日期)：</label>
                     <div class="input-group mb-2">
                         <input type="date" id="datePicker" class="form-control rounded-start-3" />
+                        <input type="time" id="startTimePicker" class="form-control" title="開始時間（可不填）" />
+                        <span class="input-group-text">~</span>
+                        <input type="time" id="endTimePicker" class="form-control" title="結束時間（可不填）" />
                         <button type="button" class="btn btn-outline-primary rounded-end-3 px-4" onclick="addSelectedDate()">加入日期</button>
                     </div>
 
-                    <textarea asp-for="CandidateDatesInput" id="candidateDatesText" class="form-control rounded-3 font-monospace" rows="4" placeholder="例：2026-08-15, 2026-08-22, 2026-08-29 (多個日期請用逗號隔開)"></textarea>
+                    <textarea asp-for="CandidateDatesInput" id="candidateDatesText" class="form-control rounded-3 font-monospace" rows="4" placeholder="例：2026-08-15, 2026-08-22 14:00~17:00 (多個請用逗號隔開)"></textarea>
                     <span asp-validation-for="CandidateDatesInput" class="text-danger small"></span>
-                    <small class="text-muted d-block mt-1">提示：您可以使用日期選擇器逐步加入，或是直接在文字區塊貼上日期清單。</small>
+                    <small class="text-muted d-block mt-1">提示：您可以使用日期選擇器逐步加入，或是直接在文字區塊貼上日期清單；時間可不填（留白視為整天），同一天可加入多個不同時間段，格式如「2026-08-22 14:00~17:00」。</small>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold fs-6">發起活動意願調查</button>
+                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold fs-6" onclick="return validateCandidateTimes()">發起活動意願調查</button>
                 </div>
             </form>
         </div>
@@ -53,21 +56,66 @@
 
 @section Scripts {
     <script>
+        function toMinutes(time) {
+            const parts = time.split(':');
+            return (+parts[0]) * 60 + (+parts[1]);
+        }
+
+        function validateCandidateTimes() {
+            const textArea = document.getElementById('candidateDatesText');
+            const entries = textArea.value.split(/[,\n\r]/).map(s => s.trim()).filter(Boolean);
+
+            for (const entry of entries) {
+                const m = entry.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})~\s*(\d{1,2}:\d{2})$/);
+                if (m) {
+                    if (toMinutes(m[3]) <= toMinutes(m[2])) {
+                        alert('結束時間必須晚於開始時間：' + entry);
+                        return false;
+                    }
+                } else if (entry.match(/^\d{4}-\d{2}-\d{2}\s*~\s*\d{1,2}:\d{2}$/)) {
+                    alert('結束時間需搭配開始時間：' + entry);
+                    return false;
+                }
+            }
+            return true;
+        }
+
         function addSelectedDate() {
             const picker = document.getElementById('datePicker');
+            const startTime = document.getElementById('startTimePicker');
+            const endTime = document.getElementById('endTimePicker');
             const textArea = document.getElementById('candidateDatesText');
 
             if (!picker.value) return;
 
+            if (endTime.value && !startTime.value) {
+                alert('請先填寫開始時間，或清除結束時間。');
+                return;
+            }
+            if (startTime.value && endTime.value && toMinutes(endTime.value) <= toMinutes(startTime.value)) {
+                alert('結束時間必須晚於開始時間。');
+                return;
+            }
+
+            let entry = picker.value;
+            if (startTime.value) {
+                entry += ' ' + startTime.value;
+                if (endTime.value) {
+                    entry += '~' + endTime.value;
+                }
+            }
+
             let current = textArea.value.trim();
             if (current.length > 0) {
-                if (!current.includes(picker.value)) {
-                    textArea.value = current + ', ' + picker.value;
+                if (!current.includes(entry)) {
+                    textArea.value = current + ', ' + entry;
                 }
             } else {
-                textArea.value = picker.value;
+                textArea.value = entry;
             }
             picker.value = '';
+            startTime.value = '';
+            endTime.value = '';
         }
     </script>
 }

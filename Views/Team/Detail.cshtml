@@ -163,8 +163,8 @@
                                 @if (day.ActivityId.HasValue)
                                 {
                                     var badgeBg = day.IsConfirmedDate ? "bg-success" : "bg-primary";
-                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge @badgeBg text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle">
-                                        👉 @day.ActivityTitle
+                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge @badgeBg text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle@(string.IsNullOrEmpty(day.ActivityTimeText) ? "" : " " + day.ActivityTimeText)">
+                                        👉 @day.ActivityTitle@(string.IsNullOrEmpty(day.ActivityTimeText) ? "" : " " + day.ActivityTimeText)
                                     </a>
                                 }
                             </div>
@@ -220,7 +220,7 @@
                                         <h6 class="fw-bold text-success mb-1">@act.Title</h6>
                                         <span class="badge bg-success rounded-pill">已定案</span>
                                     </div>
-                                    <small class="text-dark fw-bold">日期：@act.FinalDate?.ToString("yyyy-MM-dd (ddd)")</small>
+                                    <small class="text-dark fw-bold">日期：@act.FinalDate?.ToString("yyyy-MM-dd (ddd)")@(string.IsNullOrEmpty(act.FinalTimeRangeText) ? "" : " " + act.FinalTimeRangeText)</small>
                                 </a>
                             }
                         </div>

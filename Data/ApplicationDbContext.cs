@@ -50,9 +50,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(tm => new { tm.TeamId, tm.UserId })
             .IsUnique();
 
-        // ActivityCandidateDate unique index: ActivityId + CandidateDate
+        // ActivityCandidateDate unique index: ActivityId + CandidateDate + StartTime + EndTime
+        // 同一日期可有多個不同時間段的候選；時間為 null 視為整天（Service 層負責去重）
         builder.Entity<ActivityCandidateDate>()
-            .HasIndex(c => new { c.ActivityId, c.CandidateDate })
+            .HasIndex(c => new { c.ActivityId, c.CandidateDate, c.StartTime, c.EndTime })
             .IsUnique();
 
         // ActivityResponse unique index: ActivityId + CandidateDateId + UserId
