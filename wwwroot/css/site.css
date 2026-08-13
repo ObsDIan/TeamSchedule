@@ -308,6 +308,41 @@ a:hover {
 .fill-maybe { background: var(--calendar-maybe-fill); }
 .fill-available { background: var(--calendar-available-fill); }
 
+.calendar-fill-container {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.fill-segment {
+    width: 100%;
+}
+
+.team-calendar-day-card > div:not(.calendar-fill-container) {
+    position: relative;
+    z-index: 1;
+}
+
+.hover-lift,
+.transition-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.hover-lift:hover,
+.transition-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.tracking-wider {
+    letter-spacing: 0.1em;
+}
+
 .recommended {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
