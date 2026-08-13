@@ -100,7 +100,12 @@
             var isOther = !day.IsCurrentMonth ? "other-month" : "";
             var isToday = day.IsToday ? "today" : "";
 
-            <div class="calendar-day-card hover-lift shadow-sm @isOther @isToday" onclick="openDateModal('@day.Date.ToString("yyyy-MM-dd")', '@day.Status', '@day.Note', @day.IsConfirmedActivityBusy.ToString().ToLower())">
+            <div class="calendar-day-card hover-lift shadow-sm @isOther @isToday"
+                 data-date="@day.Date.ToString("yyyy-MM-dd")"
+                 data-status="@day.Status"
+                 data-note="@day.Note"
+                 data-confirmed="@day.IsConfirmedActivityBusy.ToString().ToLower()"
+                 onclick="openDateModal(this)">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="fw-bold fs-6">@day.Date.Day</span>
                     @if (day.IsToday)
@@ -147,6 +152,9 @@
 </div>
 
 <!-- 日期狀態編輯 Modal -->
+<form id="antiforgeryForm" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
 <div class="modal fade" id="dateEditModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 shadow">
@@ -209,7 +217,12 @@
             dateModal = new bootstrap.Modal(document.getElementById('dateEditModal'));
         });
 
-        function openDateModal(dateStr, currentStatus, currentNote, isConfirmedBusy) {
+        function openDateModal(cardEl) {
+            const dateStr = cardEl.dataset.date;
+            const currentStatus = cardEl.dataset.status;
+            const currentNote = cardEl.dataset.note;
+            const isConfirmedBusy = cardEl.dataset.confirmed === 'true';
+
             document.getElementById('selectedDate').value = dateStr;
             document.getElementById('modalDateTitle').innerText = '設定 ' + dateStr + ' 的個人狀態';
             document.getElementById('noteInput').value = currentNote || '';
@@ -264,13 +277,18 @@
                 })
             });
 
-            const res = await response.json();
-            if (res.success) {
-                dateModal.hide();
-                window.location.reload();
-            } else {
-                alert('更新失敗：' + (res.message || '請稍後再試'));
+            const contentType = response.headers.get('content-type') || '';
+            const res = contentType.includes('application/json')
+                ? await response.json()
+                : null;
+
+            if (!response.ok || !res?.success) {
+                alert('更新失敗：' + (res?.message || `伺服器回傳 ${response.status}，請重新整理頁面後再試。`));
+                return;
             }
+
+            dateModal.hide();
+            window.location.reload();
         }
     </script>
 }

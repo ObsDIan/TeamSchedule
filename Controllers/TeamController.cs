@@ -91,14 +91,25 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        var team = await teamService.GetTeamDetailAsync(teamId, userId, null, null);
-        var model = new CreateActivityViewModel
+        try
         {
-            TeamId = teamId,
-            TeamName = team.TeamName
-        };
+            var teamName = await teamService.GetTeamNameForMemberAsync(teamId, userId);
+            var model = new CreateActivityViewModel
+            {
+                TeamId = teamId,
+                TeamName = teamName
+            };
 
-        return View(model);
+            return View(model);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPost]
@@ -131,10 +142,35 @@ public class TeamController(
             return View(model);
         }
 
-        var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, dates);
-        TempData["SuccessMessage"] = "已成功建立團隊活動！";
+        var distinctDates = dates.Select(d => d.Date).Distinct().ToList();
+        if (distinctDates.Count > 30)
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "候選日期最多 30 個，請精簡選擇。");
+            return View(model);
+        }
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        if (distinctDates.Any(d => d < DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "候選日期不能是過去的日期（今天與未來日期均可），請重新選擇。");
+            return View(model);
+        }
+
+        try
+        {
+            var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, dates);
+            TempData["SuccessMessage"] = "已成功建立團隊活動！";
+
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), ex.Message);
+            return View(model);
+        }
     }
 
     public async Task<IActionResult> ActivityDetail(long id)
@@ -158,13 +194,63 @@ public class TeamController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> RespondActivity([FromBody] RespondActivityRequestModel request)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RespondActivity(
+    [FromBody] RespondActivityRequestModel? request)
     {
         var userId = userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "未登入" });
 
-        await teamService.RespondActivityAsync(userId, request.ActivityId, request.CandidateDateId, request.ResponseStatus);
-        return Json(new { success = true });
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "登入狀態已失效，請重新登入。"
+            });
+        }
+
+        if (request == null ||
+            request.ActivityId <= 0 ||
+            request.CandidateDateId <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "活動投票資料不完整。"
+            });
+        }
+
+        try
+        {
+            await teamService.RespondActivityAsync(
+                userId,
+                request.ActivityId,
+                request.CandidateDateId,
+                request.ResponseStatus);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPost]
@@ -174,10 +260,21 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        await teamService.ConfirmActivityAsync(userId, activityId, candidateDateId);
-        TempData["SuccessMessage"] = "已成功確認活動最終日期！參加成員的該日期已被自動記錄為忙碌。";
+        try
+        {
+            await teamService.ConfirmActivityAsync(userId, activityId, candidateDateId);
+            TempData["SuccessMessage"] = "已成功確認活動最終日期！參加成員的該日期已被自動記錄為忙碌。";
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPost]
@@ -187,9 +284,20 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        await teamService.CancelActivityAsync(userId, activityId);
-        TempData["SuccessMessage"] = "已取消該活動，自動解除對成員該日期的占用！";
+        try
+        {
+            await teamService.CancelActivityAsync(userId, activityId);
+            TempData["SuccessMessage"] = "已取消該活動，自動解除對成員該日期的占用！";
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 }

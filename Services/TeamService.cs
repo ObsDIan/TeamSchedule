@@ -94,6 +94,23 @@ public class TeamService(
         return model;
     }
 
+    public async Task<string> GetTeamNameForMemberAsync(long teamId, string userId)
+    {
+        var team = await context.Teams
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TeamId == teamId)
+            ?? throw new InvalidOperationException("找不到該團隊。");
+
+        var isMember = await context.TeamMembers
+            .AnyAsync(m => m.TeamId == teamId && m.UserId == userId);
+        if (!isMember)
+        {
+            throw new UnauthorizedAccessException("您不是該團隊的成員。");
+        }
+
+        return team.TeamName;
+    }
+
     public async Task<TeamDetailViewModel> GetTeamDetailAsync(long teamId, string userId, int? year, int? month)
     {
         var team = await context.Teams
@@ -168,6 +185,22 @@ public class TeamService(
             .AnyAsync(m => m.TeamId == teamId && m.UserId == userId);
         if (!isMember) throw new UnauthorizedAccessException("權限不足");
 
+        var distinctDates = candidateDates.Select(d => d.Date).Distinct().OrderBy(d => d).ToList();
+        if (distinctDates.Count == 0)
+        {
+            throw new InvalidOperationException("請至少提供一個候選日期。");
+        }
+
+        if (distinctDates.Count > 30)
+        {
+            throw new InvalidOperationException("候選日期最多 30 個，請精簡選擇。");
+        }
+
+        if (distinctDates.Any(d => d < DateTime.Today))
+        {
+            throw new InvalidOperationException("候選日期不能是過去的日期，請重新選擇。");
+        }
+
         var activity = new TeamActivity
         {
             TeamId = teamId,
@@ -181,7 +214,6 @@ public class TeamService(
         context.TeamActivities.Add(activity);
         await context.SaveChangesAsync();
 
-        var distinctDates = candidateDates.Select(d => d.Date).Distinct();
         foreach (var d in distinctDates)
         {
             context.ActivityCandidateDates.Add(new ActivityCandidateDate
@@ -262,10 +294,58 @@ public class TeamService(
         return model;
     }
 
-    public async Task RespondActivityAsync(string userId, long activityId, long candidateDateId, ActivityResponseStatus responseStatus)
+    public async Task RespondActivityAsync(
+    string userId,
+    long activityId,
+    long candidateDateId,
+    ActivityResponseStatus responseStatus)
     {
+        // 1. 驗證回覆狀態是否為合法列舉值
+        if (!Enum.IsDefined(typeof(ActivityResponseStatus), responseStatus))
+        {
+            throw new InvalidOperationException("無效的活動回覆狀態。");
+        }
+
+        // 2. 確認活動存在
+        var activity = await context.TeamActivities
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.ActivityId == activityId)
+            ?? throw new InvalidOperationException("找不到指定的活動。");
+
+        // 3. 確認使用者是活動所屬團隊的成員
+        var isMember = await context.TeamMembers
+            .AnyAsync(m =>
+                m.TeamId == activity.TeamId &&
+                m.UserId == userId);
+
+        if (!isMember)
+        {
+            throw new UnauthorizedAccessException("您不是該活動所屬團隊的成員。");
+        }
+
+        // 4. 只有尚在調查中的活動可以投票
+        if (activity.Status != ActivityStatus.Open)
+        {
+            throw new InvalidOperationException("此活動已定案或取消，無法再進行回覆。");
+        }
+
+        // 5. 確認候選日期確實屬於這個活動
+        var candidateExists = await context.ActivityCandidateDates
+            .AnyAsync(c =>
+                c.ActivityId == activityId &&
+                c.CandidateDateId == candidateDateId);
+
+        if (!candidateExists)
+        {
+            throw new InvalidOperationException("候選日期與活動不一致。");
+        }
+
+        // 6. 新增或更新使用者回覆
         var existing = await context.ActivityResponses
-            .FirstOrDefaultAsync(r => r.ActivityId == activityId && r.CandidateDateId == candidateDateId && r.UserId == userId);
+            .FirstOrDefaultAsync(r =>
+                r.ActivityId == activityId &&
+                r.CandidateDateId == candidateDateId &&
+                r.UserId == userId);
 
         if (existing == null)
         {
@@ -296,6 +376,11 @@ public class TeamService(
 
         var isOwner = activity.CreatedBy == userId || (activity.Team?.OwnerUserId == userId);
         if (!isOwner) throw new UnauthorizedAccessException("您沒有權限確認此活動。");
+
+        if (activity.Status == ActivityStatus.Cancelled)
+        {
+            throw new InvalidOperationException("此活動已取消，無法再進行定案。");
+        }
 
         var candidate = await context.ActivityCandidateDates
             .FirstOrDefaultAsync(c => c.ActivityId == activityId && c.CandidateDateId == candidateDateId)

@@ -60,9 +60,9 @@
                             <span class="fw-bold fs-6">@dayName</span>
                             <div class="d-flex gap-2">
                                 <select name="DaySettings[@dayKey]" class="form-select rounded-pill px-3 select-day" data-day="@dayKey">
-                                    <option value="1" selected="@(currentVal == AvailabilityStatus.Available)">🟢 有空 (Available)</option>
-                                    <option value="2" selected="@(currentVal == AvailabilityStatus.Busy)">🔴 忙碌 (Busy)</option>
-                                    <option value="3" selected="@(currentVal == AvailabilityStatus.Maybe)">🟡 不確定 (Maybe)</option>
+                                    <option value="1" selected="@(currentVal == AvailabilityStatus.Available ? "selected" : null)">🟢 有空 (Available)</option>
+                                    <option value="2" selected="@(currentVal == AvailabilityStatus.Busy ? "selected" : null)">🔴 忙碌 (Busy)</option>
+                                    <option value="3" selected="@(currentVal == AvailabilityStatus.Maybe ? "selected" : null)">🟡 不確定 (Maybe)</option>
                                 </select>
                             </div>
                         </div>
