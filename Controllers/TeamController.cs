@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -91,14 +92,25 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        var team = await teamService.GetTeamDetailAsync(teamId, userId, null, null);
-        var model = new CreateActivityViewModel
+        try
         {
-            TeamId = teamId,
-            TeamName = team.TeamName
-        };
+            var teamName = await teamService.GetTeamNameForMemberAsync(teamId, userId);
+            var model = new CreateActivityViewModel
+            {
+                TeamId = teamId,
+                TeamName = teamName
+            };
 
-        return View(model);
+            return View(model);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPost]
@@ -115,26 +127,96 @@ public class TeamController(
 
         if (!ModelState.IsValid) return View(model);
 
-        var dates = new List<DateTime>();
+        var candidates = new List<ActivityCandidateDateInput>();
         var parts = model.CandidateDatesInput.Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var p in parts)
         {
-            if (DateTime.TryParse(p.Trim(), out var parsedDate))
+            var candidate = ParseCandidateInput(p.Trim());
+            if (candidate == null)
             {
-                dates.Add(parsedDate);
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析「" + p.Trim() + "」，請使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm~HH:mm 格式。");
+                return View(model);
             }
+
+            if (candidate.EndTime.HasValue && !candidate.StartTime.HasValue)
+            {
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "「" + p.Trim() + "」的結束時間需搭配開始時間。");
+                return View(model);
+            }
+
+            if (candidate.StartTime.HasValue && candidate.EndTime.HasValue && candidate.EndTime <= candidate.StartTime)
+            {
+                ModelState.AddModelError(nameof(model.CandidateDatesInput), "「" + p.Trim() + "」的結束時間必須晚於開始時間。");
+                return View(model);
+            }
+
+            candidates.Add(candidate);
         }
 
-        if (dates.Count == 0)
+        if (candidates.Count == 0)
         {
-            ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析日期格式，請使用 YYYY-MM-DD 格式。");
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "無法解析日期格式，請使用 YYYY-MM-DD 或 YYYY-MM-DD HH:mm~HH:mm 格式。");
             return View(model);
         }
 
-        var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, dates);
-        TempData["SuccessMessage"] = "已成功建立團隊活動！";
+        var distinctDates = candidates.Select(c => c.Date).Distinct().ToList();
+        if (distinctDates.Count > 30)
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "候選日期最多 30 個，請精簡選擇。");
+            return View(model);
+        }
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        if (distinctDates.Any(d => d < DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), "候選日期不能是過去的日期（今天與未來日期均可），請重新選擇。");
+            return View(model);
+        }
+
+        try
+        {
+            var activityId = await teamService.CreateActivityAsync(userId, model.TeamId, model.Title, model.Description, candidates);
+            TempData["SuccessMessage"] = "已成功建立團隊活動！";
+
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(nameof(model.CandidateDatesInput), ex.Message);
+            return View(model);
+        }
+    }
+
+    private static ActivityCandidateDateInput? ParseCandidateInput(string input)
+    {
+        var segments = input.Split(new[] { '~', '～' }, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length == 1)
+        {
+            if (!DateTime.TryParse(segments[0].Trim(), out var date)) return null;
+            return new ActivityCandidateDateInput
+            {
+                Date = date.Date,
+                StartTime = date.TimeOfDay == TimeSpan.Zero ? null : date.TimeOfDay,
+                EndTime = null
+            };
+        }
+
+        if (segments.Length == 2)
+        {
+            if (!DateTime.TryParse(segments[0].Trim(), out var date)) return null;
+            if (!TimeSpan.TryParse(segments[1].Trim(), out var endTime)) return null;
+            return new ActivityCandidateDateInput
+            {
+                Date = date.Date,
+                StartTime = date.TimeOfDay == TimeSpan.Zero ? null : date.TimeOfDay,
+                EndTime = endTime
+            };
+        }
+
+        return null;
     }
 
     public async Task<IActionResult> ActivityDetail(long id)
@@ -158,13 +240,63 @@ public class TeamController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> RespondActivity([FromBody] RespondActivityRequestModel request)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RespondActivity(
+    [FromBody] RespondActivityRequestModel? request)
     {
         var userId = userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "未登入" });
 
-        await teamService.RespondActivityAsync(userId, request.ActivityId, request.CandidateDateId, request.ResponseStatus);
-        return Json(new { success = true });
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "登入狀態已失效，請重新登入。"
+            });
+        }
+
+        if (request == null ||
+            request.ActivityId <= 0 ||
+            request.CandidateDateId <= 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "活動投票資料不完整。"
+            });
+        }
+
+        try
+        {
+            await teamService.RespondActivityAsync(
+                userId,
+                request.ActivityId,
+                request.CandidateDateId,
+                request.ResponseStatus);
+
+            return Json(new
+            {
+                success = true
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPost]
@@ -174,10 +306,21 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        await teamService.ConfirmActivityAsync(userId, activityId, candidateDateId);
-        TempData["SuccessMessage"] = "已成功確認活動最終日期！參加成員的該日期已被自動記錄為忙碌。";
+        try
+        {
+            await teamService.ConfirmActivityAsync(userId, activityId, candidateDateId);
+            TempData["SuccessMessage"] = "已成功確認活動最終日期！參加成員的該日期已被自動記錄為忙碌。";
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
     }
 
     [HttpPost]
@@ -187,9 +330,78 @@ public class TeamController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
-        await teamService.CancelActivityAsync(userId, activityId);
-        TempData["SuccessMessage"] = "已取消該活動，自動解除對成員該日期的占用！";
+        try
+        {
+            await teamService.CancelActivityAsync(userId, activityId);
+            TempData["SuccessMessage"] = "已取消該活動，自動解除對成員該日期的占用！";
 
-        return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+            return RedirectToAction(nameof(ActivityDetail), new { id = activityId });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
+
+    public async Task<IActionResult> ExportIcs(long activityId)
+    {
+        var userId = userManager.GetUserId(User);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        try
+        {
+            var activity = await teamService.GetActivityForExportAsync(activityId, userId);
+            var teamName = activity.Team?.TeamName ?? "";
+
+            var builder = new StringBuilder();
+            builder.AppendLine("BEGIN:VCALENDAR");
+            builder.AppendLine("VERSION:2.0");
+            builder.AppendLine("PRODID:-//TeamSchedule//TeamSchedule//ZH-TW");
+            builder.AppendLine("CALSCALE:GREGORIAN");
+            builder.AppendLine("METHOD:PUBLISH");
+            builder.AppendLine("BEGIN:VEVENT");
+            builder.AppendLine($"UID:{activity.ActivityId}@teamschedule.local");
+            builder.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
+            builder.AppendLine($"DTSTART;VALUE=DATE:{activity.FinalDate!.Value:yyyyMMdd}");
+            builder.AppendLine($"SUMMARY:{EscapeIcsText(activity.Title)}");
+            var description = string.IsNullOrWhiteSpace(activity.Description)
+                ? $"團隊：{teamName}"
+                : $"{activity.Description}\n團隊：{teamName}";
+            builder.AppendLine($"DESCRIPTION:{EscapeIcsText(description)}");
+            builder.AppendLine("END:VEVENT");
+            builder.AppendLine("END:VCALENDAR");
+
+            var fileName = $"{SanitizeFileName(activity.Title)}.ics";
+            return File(Encoding.UTF8.GetBytes(builder.ToString()), "text/calendar", fileName);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
+
+    private static string EscapeIcsText(string text)
+    {
+        return text
+            .Replace("\\", "\\\\")
+            .Replace(";", "\\;")
+            .Replace(",", "\\,")
+            .Replace("\r\n", "\\n")
+            .Replace("\n", "\\n");
+    }
+
+    private static string SanitizeFileName(string name)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var cleaned = new string(name.Select(c => invalidChars.Contains(c) ? '_' : c).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "活動" : cleaned;
     }
 }

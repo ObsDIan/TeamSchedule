@@ -24,65 +24,14 @@
 
     .team-calendar-day-card {
         min-height: 120px;
-        border: 1px solid #e9ecef;
         border-radius: 12px;
         padding: 8px;
         position: relative;
         overflow: hidden;
-        background-color: #ffffff;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         z-index: 1;
-    }
-
-    /* 4 色由下而上百分比填滿容器 */
-    .calendar-fill-container {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        z-index: -1;
-        opacity: 0.85;
-    }
-
-    .fill-segment {
-        width: 100%;
-        transition: height 0.3s ease;
-    }
-
-    .fill-available {
-        background-color: rgba(25, 135, 84, 0.35);
-    }
-
-    .fill-maybe {
-        background-color: rgba(255, 193, 7, 0.35);
-    }
-
-    .fill-busy {
-        background-color: rgba(220, 53, 69, 0.35);
-    }
-
-    .fill-unset {
-        background-color: rgba(108, 117, 125, 0.15);
-    }
-
-    /* 深色模式調色 */
-    [data-bs-theme="dark"] .fill-available {
-        background-color: rgba(16, 185, 129, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-maybe {
-        background-color: rgba(245, 158, 11, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-busy {
-        background-color: rgba(239, 68, 68, 0.3);
-    }
-
-    [data-bs-theme="dark"] .fill-unset {
-        background-color: rgba(71, 85, 105, 0.2);
     }
 
     .team-calendar-day-card.other-month {
@@ -90,13 +39,13 @@
     }
 
     .team-calendar-day-card.today {
-        border: 2px solid #4f46e5 !important;
+        border: 2px solid var(--accent) !important;
     }
 
     .candidate-flag {
         font-size: 0.75rem;
-        background-color: #6366f1;
-        color: white;
+        background-color: var(--accent);
+        color: var(--text-on-accent);
         padding: 2px 6px;
         border-radius: 6px;
         font-weight: bold;
@@ -144,7 +93,7 @@
         <!-- 左側：團隊 4 色比例累積月曆 (佔 8 欄) -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <h4 class="fw-bold mb-0">📊 團隊空檔累積月曆</h4>
                     <div class="d-flex align-items-center gap-2">
                         <a asp-action="Detail" asp-route-id="@Model.TeamId" asp-route-year="@prevMonth.Year" asp-route-month="@prevMonth.Month" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
@@ -167,6 +116,8 @@
                     <span class="ms-auto">總人數：<strong>@Model.Calendar.TotalMembersCount 人</strong></span>
                 </div>
 
+                <!-- 月曆網格 (手機橫向捲動) -->
+                <div class="calendar-scroll">
                 <div class="team-calendar-grid mb-2">
                     <div class="team-calendar-day-header text-danger">週日</div>
                     <div class="team-calendar-day-header">週一</div>
@@ -183,7 +134,7 @@
                         var isOther = !day.IsCurrentMonth ? "other-month" : "";
                         var isToday = day.IsToday ? "today" : "";
 
-                        <div class="team-calendar-day-card @isOther @isToday">
+                        <div class="team-calendar-day-card hover-lift shadow-sm @isOther @isToday">
                             <!-- 4 色由下而上動態比例填充背景 -->
                             <div class="calendar-fill-container">
                                 <div class="fill-segment fill-unset" style="height: @day.UnsetPercent%;"></div>
@@ -214,13 +165,14 @@
                                 @if (day.ActivityId.HasValue)
                                 {
                                     var badgeBg = day.IsConfirmedDate ? "bg-success" : "bg-primary";
-                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge @badgeBg text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle">
-                                        👉 @day.ActivityTitle
+                                    <a asp-action="ActivityDetail" asp-route-id="@day.ActivityId" class="badge @badgeBg text-decoration-none mt-1 text-truncate d-block" title="@day.ActivityTitle@(string.IsNullOrEmpty(day.ActivityTimeText) ? "" : " " + day.ActivityTimeText)">
+                                        👉 @day.ActivityTitle@(string.IsNullOrEmpty(day.ActivityTimeText) ? "" : " " + day.ActivityTimeText)
                                     </a>
                                 }
                             </div>
                         </div>
                     }
+                </div>
                 </div>
             </div>
         </div>
@@ -271,7 +223,7 @@
                                         <h6 class="fw-bold text-success mb-1">@act.Title</h6>
                                         <span class="badge bg-success rounded-pill">已定案</span>
                                     </div>
-                                    <small class="text-dark fw-bold">日期：@act.FinalDate?.ToString("yyyy-MM-dd (ddd)")</small>
+                                    <small class="text-dark fw-bold">日期：@act.FinalDate?.ToString("yyyy-MM-dd (ddd)")@(string.IsNullOrEmpty(act.FinalTimeRangeText) ? "" : " " + act.FinalTimeRangeText)</small>
                                 </a>
                             }
                         </div>

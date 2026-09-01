@@ -13,43 +13,23 @@
         gap: 8px;
     }
 
-    .calendar-day-header {
-        text-align: center;
-        font-weight: 600;
-        padding: 10px;
-        background: rgba(248, 249, 250, 0.8);
-        border-radius: 8px;
-        color: #495057;
-    }
-
     .calendar-day-card {
         min-height: 110px;
-        border: 1px solid #e9ecef;
         border-radius: 12px;
         padding: 10px;
         position: relative;
-        background-color: #ffffff;
-        transition: all 0.2s ease-in-out;
         cursor: pointer;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
 
-    .calendar-day-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border-color: #4f46e5;
-    }
-
     .calendar-day-card.other-month {
         opacity: 0.45;
-        background-color: #f8f9fa;
     }
 
     .calendar-day-card.today {
-        border: 2px solid #4f46e5 !important;
-        background-color: #f0f3ff;
+        border: 2px solid var(--accent) !important;
     }
 
     .status-badge {
@@ -60,30 +40,10 @@
         display: inline-block;
     }
 
-    .bg-available {
-        background-color: #d1e7dd;
-        color: #0f5132;
-    }
-
-    .bg-busy {
-        background-color: #f8d7da;
-        color: #842029;
-    }
-
-    .bg-maybe {
-        background-color: #fff3cd;
-        color: #664d03;
-    }
-
-    .bg-unset {
-        background-color: #e2e3e5;
-        color: #41464b;
-    }
-
     .confirmed-activity-tag {
         font-size: 0.75rem;
-        background-color: #dc3545;
-        color: white;
+        background-color: var(--danger);
+        color: var(--text-on-accent);
         padding: 3px 6px;
         border-radius: 6px;
         margin-top: 4px;
@@ -94,12 +54,12 @@
 </style>
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">📅 我的個人狀態月曆</h2>
             <p class="text-muted mb-0">管理您的個人可用日期，團隊將依此自動計算空檔。</p>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
             <a asp-action="Calendar" asp-route-year="@prevMonth.Year" asp-route-month="@prevMonth.Month" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                 &laquo; @prevMonth.Month 月
             </a>
@@ -114,7 +74,7 @@
     </div>
 
     <!-- 图例 -->
-    <div class="d-flex gap-3 mb-3 p-3 bg-white rounded-3 shadow-sm border">
+    <div class="d-flex flex-wrap gap-3 mb-3 p-3 rounded-3 shadow-sm border">
         <span class="fw-bold me-2">狀態圖例：</span>
         <span class="status-badge bg-available">🟢 有空 (Available)</span>
         <span class="status-badge bg-busy">🔴 忙碌 (Busy)</span>
@@ -123,24 +83,30 @@
         <span class="ms-auto text-muted small">* 點擊任意日期即可修改或新增個人特殊備註。</span>
     </div>
 
-    <!-- 七欄網格 -->
-    <div class="calendar-grid mb-2">
-        <div class="calendar-day-header text-danger">週日</div>
-        <div class="calendar-day-header">週一</div>
-        <div class="calendar-day-header">週二</div>
-        <div class="calendar-day-header">週三</div>
-        <div class="calendar-day-header">週四</div>
-        <div class="calendar-day-header">週五</div>
-        <div class="calendar-day-header text-primary">週六</div>
-    </div>
+    <!-- 七欄網格 (手機橫向捲動) -->
+    <div class="calendar-scroll">
+        <div class="calendar-grid mb-2">
+            <div class="calendar-day-header text-danger">週日</div>
+            <div class="calendar-day-header">週一</div>
+            <div class="calendar-day-header">週二</div>
+            <div class="calendar-day-header">週三</div>
+            <div class="calendar-day-header">週四</div>
+            <div class="calendar-day-header">週五</div>
+            <div class="calendar-day-header text-primary">週六</div>
+        </div>
 
-    <div class="calendar-grid">
+        <div class="calendar-grid">
         @foreach (var day in Model.Days)
         {
             var isOther = !day.IsCurrentMonth ? "other-month" : "";
             var isToday = day.IsToday ? "today" : "";
 
-            <div class="calendar-day-card @isOther @isToday" onclick="openDateModal('@day.Date.ToString("yyyy-MM-dd")', '@day.Status', '@day.Note', @day.IsConfirmedActivityBusy.ToString().ToLower())">
+            <div class="calendar-day-card hover-lift shadow-sm @isOther @isToday"
+                 data-date="@day.Date.ToString("yyyy-MM-dd")"
+                 data-status="@day.Status"
+                 data-note="@day.Note"
+                 data-confirmed="@day.IsConfirmedActivityBusy.ToString().ToLower()"
+                 onclick="openDateModal(this)">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="fw-bold fs-6">@day.Date.Day</span>
                     @if (day.IsToday)
@@ -184,9 +150,13 @@
             </div>
         }
     </div>
+    </div>
 </div>
 
 <!-- 日期狀態編輯 Modal -->
+<form id="antiforgeryForm" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
 <div class="modal fade" id="dateEditModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 shadow">
@@ -249,7 +219,12 @@
             dateModal = new bootstrap.Modal(document.getElementById('dateEditModal'));
         });
 
-        function openDateModal(dateStr, currentStatus, currentNote, isConfirmedBusy) {
+        function openDateModal(cardEl) {
+            const dateStr = cardEl.dataset.date;
+            const currentStatus = cardEl.dataset.status;
+            const currentNote = cardEl.dataset.note;
+            const isConfirmedBusy = cardEl.dataset.confirmed === 'true';
+
             document.getElementById('selectedDate').value = dateStr;
             document.getElementById('modalDateTitle').innerText = '設定 ' + dateStr + ' 的個人狀態';
             document.getElementById('noteInput').value = currentNote || '';
@@ -304,13 +279,18 @@
                 })
             });
 
-            const res = await response.json();
-            if (res.success) {
-                dateModal.hide();
-                window.location.reload();
-            } else {
-                alert('更新失敗：' + (res.message || '請稍後再試'));
+            const contentType = response.headers.get('content-type') || '';
+            const res = contentType.includes('application/json')
+                ? await response.json()
+                : null;
+
+            if (!response.ok || !res?.success) {
+                alert('更新失敗：' + (res?.message || `伺服器回傳 ${response.status}，請重新整理頁面後再試。`));
+                return;
             }
+
+            dateModal.hide();
+            window.location.reload();
         }
     </script>
 }

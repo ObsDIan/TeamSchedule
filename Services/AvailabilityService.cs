@@ -13,7 +13,6 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
         // Rule 1: Confirmed activity
         var hasConfirmedActivity = await context.ActivityParticipants
-            .Include(p => p.Activity)
             .AnyAsync(p => p.UserId == userId &&
                            p.ParticipationStatus == ParticipationStatus.Joined &&
                            p.Activity != null &&
@@ -47,6 +46,13 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
         // Rule 4: Unset (null)
         return null;
+    }
+
+    public async Task<Dictionary<int, AvailabilityStatus>> GetWeeklyAvailabilityAsync(string userId)
+    {
+        return await context.UserWeeklyAvailabilities
+            .Where(w => w.UserId == userId)
+            .ToDictionaryAsync(w => w.DayOfWeek, w => w.AvailabilityStatus);
     }
 
     public async Task<CalendarMonthViewModel> GetPersonalCalendarMonthAsync(string userId, int year, int month)
@@ -271,7 +277,10 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
                 IsConfirmedDate = confirmedAct != null,
                 IsCandidateDate = confirmedAct == null && dayCandidate != null,
                 ActivityId = confirmedAct?.ActivityId ?? dayCandidate?.ActivityId,
-                ActivityTitle = confirmedAct?.Title ?? dayCandidate?.Activity?.Title
+                ActivityTitle = confirmedAct?.Title ?? dayCandidate?.Activity?.Title,
+                ActivityTimeText = confirmedAct != null
+                    ? ScheduleTimeFormatter.Format(confirmedAct.FinalStartTime, confirmedAct.FinalEndTime)
+                    : ScheduleTimeFormatter.Format(dayCandidate?.StartTime, dayCandidate?.EndTime)
             };
 
             model.Days.Add(dayModel);
@@ -283,8 +292,9 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
     public async Task SetDateOverrideAsync(string userId, DateTime date, AvailabilityStatus? status, string? note = null)
     {
         var dateOnly = date.Date;
+        var nextDate = dateOnly.AddDays(1);
         var existing = await context.UserDateOverrides
-            .FirstOrDefaultAsync(o => o.UserId == userId && o.TargetDate.Date == dateOnly);
+            .FirstOrDefaultAsync(o => o.UserId == userId && o.TargetDate >= dateOnly && o.TargetDate < nextDate);
 
         if (status == null)
         {
