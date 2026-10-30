@@ -366,7 +366,24 @@ public class TeamController(
             builder.AppendLine("BEGIN:VEVENT");
             builder.AppendLine($"UID:{activity.ActivityId}@teamschedule.local");
             builder.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
-            builder.AppendLine($"DTSTART;VALUE=DATE:{activity.FinalDate!.Value:yyyyMMdd}");
+            var finalDate = activity.FinalDate!.Value.Date;
+            if (activity.FinalStartTime.HasValue)
+            {
+                var start = finalDate.Add(activity.FinalStartTime.Value);
+                var end = activity.FinalEndTime.HasValue
+                    ? finalDate.Add(activity.FinalEndTime.Value)
+                    : start.AddHours(1);
+
+                if (end <= start) end = end.AddDays(1);
+
+                builder.AppendLine($"DTSTART:{start:yyyyMMddTHHmmss}");
+                builder.AppendLine($"DTEND:{end:yyyyMMddTHHmmss}");
+            }
+            else
+            {
+                builder.AppendLine($"DTSTART;VALUE=DATE:{finalDate:yyyyMMdd}");
+                builder.AppendLine($"DTEND;VALUE=DATE:{finalDate.AddDays(1):yyyyMMdd}");
+            }
             builder.AppendLine($"SUMMARY:{EscapeIcsText(activity.Title)}");
             var description = string.IsNullOrWhiteSpace(activity.Description)
                 ? $"團隊：{teamName}"
