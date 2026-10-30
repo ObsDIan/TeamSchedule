@@ -27,6 +27,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -61,6 +62,7 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -72,5 +74,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
+
+app.MapHealthChecks("/health");
 
 app.Run();
