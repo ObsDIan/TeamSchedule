@@ -59,6 +59,14 @@ public class PersonalController(
         var userId = userManager.GetUserId(User);
         if (string.IsNullOrEmpty(userId)) return Challenge();
 
+        if (model.DaySettings.Count != 7 ||
+            model.DaySettings.Keys.Any(day => day is < 0 or > 6) ||
+            model.DaySettings.Values.Any(status => !Enum.IsDefined(status)))
+        {
+            ModelState.AddModelError(nameof(model.DaySettings), "每週設定資料不完整或格式不正確。");
+            return View(model);
+        }
+
         await availabilityService.SaveWeeklyAvailabilityAsync(userId, model.DaySettings);
         TempData["SuccessMessage"] = "已成功更新您的每週預設狀態！";
 
@@ -67,12 +75,28 @@ public class PersonalController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SetOverride([FromBody] SetDateOverrideRequestModel request)
+    public async Task<IActionResult> SetOverride([FromBody] SetDateOverrideRequestModel? request)
     {
         var userId = userManager.GetUserId(User);
-        if (string.IsNullOrEmpty(userId)) return Json(new { success = false, message = "未登入" });
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new { success = false, message = "登入狀態已失效，請重新登入。" });
 
-        await availabilityService.SetDateOverrideAsync(userId, request.Date, request.Status, request.Note);
+        if (request == null || request.Date == default)
+        {
+            return BadRequest(new { success = false, message = "日期資料不完整。" });
+        }
+
+        if (request.Status.HasValue && !Enum.IsDefined(request.Status.Value))
+        {
+            return BadRequest(new { success = false, message = "狀態格式不正確。" });
+        }
+
+        var note = request.Note?.Trim();
+        if (note?.Length > 500)
+        {
+            return BadRequest(new { success = false, message = "備註不能超過 500 個字。" });
+        }
+
+        await availabilityService.SetDateOverrideAsync(userId, request.Date, request.Status, note);
         return Json(new { success = true });
     }
 }
