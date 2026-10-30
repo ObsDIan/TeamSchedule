@@ -291,6 +291,10 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
     public async Task SetDateOverrideAsync(string userId, DateTime date, AvailabilityStatus? status, string? note = null)
     {
+        if (date == default) throw new ArgumentException("Date is required.", nameof(date));
+        if (status.HasValue && !Enum.IsDefined(status.Value)) throw new ArgumentOutOfRangeException(nameof(status));
+        if (note?.Length > 500) throw new ArgumentException("Note cannot exceed 500 characters.", nameof(note));
+
         var dateOnly = date.Date;
         var nextDate = dateOnly.AddDays(1);
         var existing = await context.UserDateOverrides
@@ -329,6 +333,14 @@ public class AvailabilityService(ApplicationDbContext context) : IAvailabilitySe
 
     public async Task SaveWeeklyAvailabilityAsync(string userId, Dictionary<int, AvailabilityStatus> weeklySettings)
     {
+        ArgumentNullException.ThrowIfNull(weeklySettings);
+        if (weeklySettings.Count != 7 ||
+            weeklySettings.Keys.Any(day => day is < 0 or > 6) ||
+            weeklySettings.Values.Any(status => !Enum.IsDefined(status)))
+        {
+            throw new ArgumentException("Weekly settings must contain valid values for all seven days.", nameof(weeklySettings));
+        }
+
         var existingSettings = await context.UserWeeklyAvailabilities
             .Where(w => w.UserId == userId)
             .ToDictionaryAsync(w => w.DayOfWeek);
